@@ -1,0 +1,44 @@
+import { app, BrowserWindow, ipcMain } from "electron";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+function createWindow() {
+    const win = new BrowserWindow({
+        width: 1280,
+        height: 960,
+        frame: false,
+
+        webPreferences: {
+            preload: path.join(__dirname, "preload.js"),
+            contextIsolation: true,
+            nodeIntegration: false,
+            devTools: true,
+        },
+    });
+
+    win.loadURL("http://localhost:5173");
+
+    console.log("PRELOAD PATH:", path.join(__dirname, "preload.js"));
+}
+
+ipcMain.on("window-close", (event) => {
+    event.sender.getOwnerBrowserWindow().close();
+});
+
+ipcMain.on("window-minimize", (event) => {
+    event.sender.getOwnerBrowserWindow().minimize();
+});
+
+ipcMain.on("window-maximize", (event) => {
+    const win = event.sender.getOwnerBrowserWindow();
+    if (win.isMaximized()) {
+        win.unmaximize();
+    } else {
+        win.maximize();
+    }
+});
+
+app.whenReady().then(createWindow);

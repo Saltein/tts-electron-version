@@ -1,0 +1,26 @@
+@use "../../../../shared/styles/variables.scss" as *;
+
+.button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: transparent;
+    width: 56px;
+    height: 100%;
+    border-radius: $border-radius-lg;
+
+    cursor: pointer;
+
+    &:hover {
+        background-color: var(--color-border);
+        transition: 0.05s;
+    }
+
+    &.close {
+        border-radius: $border-radius-sm;
+
+        &:hover {
+            background-color: var(--color-close);
+        }
+    }
+}

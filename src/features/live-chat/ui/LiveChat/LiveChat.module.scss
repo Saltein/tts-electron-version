@@ -1,0 +1,23 @@
+@import '../../../../shared/styles/variables.scss';
+
+.wrapper {
+    display: flex;
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+    align-items: flex-start;
+    justify-content: flex-end;
+    overflow: hidden;
+    max-width: 720px;
+
+    // Маска сверху вниз
+    mask-image: linear-gradient(to bottom, transparent, black 5%, black 95%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 5%, black 95%);
+}
+
+.anchor {
+    position: absolute;
+    bottom: 0;
+}

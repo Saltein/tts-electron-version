@@ -1,0 +1,24 @@
+@import '../../../shared/styles/variables.scss';
+
+.connections {
+    display: flex;
+    flex-direction: row;
+    gap: $spacing-md;
+    padding: $spacing-md 0;
+}
+
+.href {
+    color: var(--color-primary);
+}
+
+.lobby {
+    display: flex;
+    gap: $spacing-md;
+    margin-left: auto;
+}
+
+.password {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+}
