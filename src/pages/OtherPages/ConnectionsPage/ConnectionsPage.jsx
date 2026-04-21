@@ -183,7 +183,6 @@ export const ConnectionsPage = () => {
                         inputs={vkInputs}
                         title={"VK Видео Live"}
                         dispatcher={setVkConnectionData}
-                        isActive={false}
                     />
                 </div>
             </DefaultWidgetShape>
