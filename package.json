@@ -21,20 +21,16 @@
         },
         "files": [
             "dist/**/*",
-            "electron/**/*"
+            "electron/**/*",
+            "package.json"
         ],
+        "extraMetadata": {
+            "main": "electron/main.js"
+        },
         "asar": true,
-        "asarUnpack": [
-            "**/*.node"
-        ],
         "win": {
             "target": "nsis",
             "icon": "public/icon.ico"
-        },
-        "nsis": {
-            "oneClick": false,
-            "allowToChangeInstallationDirectory": true,
-            "createDesktopShortcut": true
         }
     },
     "dependencies": {

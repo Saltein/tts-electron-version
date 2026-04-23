@@ -10,7 +10,6 @@ function createWindow() {
         width: 1280,
         height: 960,
         frame: false,
-
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),
             contextIsolation: true,
@@ -19,9 +18,13 @@ function createWindow() {
         },
     });
 
-    win.loadURL("http://localhost:5173");
+    const isDev = !app.isPackaged;
 
-    console.log("PRELOAD PATH:", path.join(__dirname, "preload.js"));
+    if (isDev) {
+        win.loadURL("http://localhost:5173");
+    } else {
+        win.loadFile(path.join(__dirname, "../dist/index.html"));
+    }
 }
 
 ipcMain.on("window-close", (event) => {
