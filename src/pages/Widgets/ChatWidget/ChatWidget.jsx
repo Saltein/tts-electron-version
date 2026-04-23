@@ -13,8 +13,8 @@ import WebSocketRoom from '../../../features/ws-lobby/ui/LobbyBlock/WebSocketRoo
 import { connectVkPlayClient } from '../../../features/live-chat/lib/vk/vkClientSingleton'
 
 export const ChatWidget = () => {
-    const twitchBotName = process.env.REACT_APP_TWITCH_BOT_NAME
-    const twitchBotToken = process.env.REACT_APP_TWITCH_BOT_TOKEN
+    const twitchBotName = import.meta.env.VITE_TWITCH_BOT_NAME
+    const twitchBotToken = import.meta.env.VITE_TWITCH_BOT_TOKEN
 
     const [searchParams] = useSearchParams()
     const dispatch = useDispatch()
