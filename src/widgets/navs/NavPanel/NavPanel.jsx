@@ -66,6 +66,7 @@ export const NavPanel = () => {
                 backgroundColor={"transparent"}
                 padding={"0"}
                 title={"TTS Chat"}
+                noTitle={isMobile}
                 onClick={handleOpenNavWidget}
                 isMobile={isMobile}
             >
