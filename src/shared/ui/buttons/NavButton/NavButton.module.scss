@@ -1,4 +1,4 @@
-@import '../../../styles/variables.scss';
+@import "../../../styles/variables.scss";
 
 .wrapper {
     display: flex;
@@ -14,7 +14,7 @@
     }
 
     &:hover {
-        gap: $spacing-xs;
+        gap: calc($spacing-sm - 4px);
     }
 
     &.current {
@@ -23,11 +23,25 @@
 
         &.first {
             margin-top: $spacing-md;
+
+            &.mobile {
+                margin-top: 4px;
+            }
         }
 
         &.last {
             margin-bottom: $spacing-md;
+            &.mobile {
+                margin-bottom: 4px;
+            }
         }
+    }
+
+    &.mobile {
+        justify-content: center;
+        gap: 0;
+        width: 40px;
+        border-radius: $border-radius-lg;
     }
 }
 
@@ -45,5 +59,19 @@
         transform: $transition-fast;
         width: 4px;
         height: 28px;
+    }
+}
+
+.icon {
+    width: 24px;
+    height: 24px;
+    margin-right: calc($spacing-md - 4px);
+
+    &.current {
+        margin-right: 0;
+    }
+
+    &.mobile {
+        margin-right: 0;
     }
 }

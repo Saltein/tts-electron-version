@@ -34,9 +34,10 @@ export const DefaultWidgetShape = ({
     display,
     flex,
     overflowBlock,
+    isMobile
 }) => {
     const wrapperStyles = {
-        width: width && width,
+        width: width && !isMobile ? width : "fit-content",
         height: height && height,
         paddingLeft: paddingLeft && paddingLeft,
         paddingTop: paddingTop ?? undefined,
@@ -67,8 +68,8 @@ export const DefaultWidgetShape = ({
         backgroundColor: backgroundColorBlock ?? undefined,
         paddingTop: paddingTopBlock ?? undefined,
         paddingBottom: paddingBottomBlock ?? undefined,
-        paddingLeft: paddingLeftBlock ?? undefined,
-        paddingRight: paddingRightBlock ?? undefined,
+        paddingLeft: isMobile ? "4px" : paddingLeftBlock ?? undefined,
+        paddingRight: isMobile ? "4px" : paddingRightBlock ?? undefined,
         ...(padding && !(paddingTopBlock || paddingBottomBlock || paddingLeftBlock || paddingRightBlock)
             ? { paddingBlock }
             : {}),
@@ -83,7 +84,7 @@ export const DefaultWidgetShape = ({
 
     return (
         <div className={`${s.wrapper} ${animated ? s.animated : ''}`} style={wrapperStyles}>
-            {!noTitle && <DefaultTitle title={title} titleStyles={titleStyles} onClick={onClick} />}
+            {!noTitle || isMobile && <DefaultTitle title={title} titleStyles={titleStyles} onClick={onClick} />}
 
             {noBlock ?
                 <>

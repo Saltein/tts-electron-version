@@ -12,7 +12,7 @@ export const LiveChatPage = () => {
                 <LiveChat />
             </DefaultWidgetShape>
             <DefaultWidgetShape marginLeft={'0'} backgroundColor={'transparent'} padding={'0'} title='Настройки чата'
-                paddingBlock={'16px'} flex={1} height={'fit-content'}>
+                paddingBlock={'16px'} height={'fit-content'}>
                 <ChatSettings />
             </DefaultWidgetShape>
         </div>
