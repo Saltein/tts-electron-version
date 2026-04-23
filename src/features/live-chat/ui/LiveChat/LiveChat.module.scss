@@ -1,4 +1,43 @@
-@import '../../../../shared/styles/variables.scss';
+@use "../../../../shared/styles/variables.scss" as *;
+
+.megaWrapper {
+    position: relative;
+    height: 100%;
+    width: 100%;
+
+    &.fullscreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1000;
+        background-color: var(--color-surface);
+        padding: $spacing-sm;
+    }
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: calc(100% + $spacing-md * 2);
+    height: 48px;
+    position: absolute;
+    left: -$spacing-md;
+    top: -$spacing-md;
+
+    &.fullscreen {
+        left: -$spacing-xl;
+        top: 0;
+    }
+}
+
+.draggable {
+    width: calc(100% - 48px);
+    height: 100%;
+    -webkit-app-region: drag;
+}
 
 .wrapper {
     display: flex;
@@ -10,14 +49,41 @@
     align-items: flex-start;
     justify-content: flex-end;
     overflow: hidden;
-    max-width: 720px;
 
     // Маска сверху вниз
     mask-image: linear-gradient(to bottom, transparent, black 5%, black 95%);
-    -webkit-mask-image: linear-gradient(to bottom, transparent, black 5%, black 95%);
+    -webkit-mask-image: linear-gradient(
+        to bottom,
+        transparent,
+        black 5%,
+        black 95%
+    );
 }
 
 .anchor {
     position: absolute;
     bottom: 0;
+}
+
+.fullscreenButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    height: 48px;
+    width: 48px;
+    right: 0;
+    top: 0;
+    cursor: pointer;
+    z-index: 1000;
+
+    &:hover {
+        transition: 0.1s;
+        transform: scale(1.1);
+    }
+}
+
+.icon {
+    width: 24px;
+    height: 24px;
 }

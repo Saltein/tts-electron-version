@@ -1,5 +1,5 @@
-import { DefaultTitle } from '../../ui'
-import s from './DefaultWidgetShape.module.scss'
+import { DefaultTitle } from "../../ui";
+import s from "./DefaultWidgetShape.module.scss";
 
 export const DefaultWidgetShape = ({
     onClick,
@@ -20,7 +20,7 @@ export const DefaultWidgetShape = ({
     backgroundColor,
     animated = false,
     shadow,
-    title = 'Заголовок',
+    title = "Заголовок",
     paddingTopBlock,
     paddingBottomBlock,
     paddingLeftBlock,
@@ -34,17 +34,18 @@ export const DefaultWidgetShape = ({
     display,
     flex,
     overflowBlock,
-    isMobile
+    isMobile = false, // важно
 }) => {
     const wrapperStyles = {
-        width: width && !isMobile ? width : "fit-content",
-        height: height && height,
-        paddingLeft: paddingLeft && paddingLeft,
+        width: isMobile ? "fit-content" : width,
+        height: height,
+        paddingLeft: paddingLeft,
         paddingTop: paddingTop ?? undefined,
-        ...(padding && !(paddingTop || paddingBottom || paddingLeft || paddingRight)
+        ...(padding &&
+        !(paddingTop || paddingBottom || paddingLeft || paddingRight)
             ? { padding }
             : {}),
-        gap: gap && gap,
+        gap: gap,
         marginTop: marginTop ?? undefined,
         marginBottom: marginBottom ?? undefined,
         marginLeft: marginLeft ?? undefined,
@@ -52,11 +53,12 @@ export const DefaultWidgetShape = ({
         ...(margin && !(marginTop || marginRight || marginBottom || marginLeft)
             ? { margin }
             : {}),
-        backgroundColor: backgroundColor && backgroundColor,
-        boxShadow: shadow && `0 ${shadow}px ${shadow * 1.5}px rgba(0, 0, 0, 0.15)`,
+        backgroundColor: backgroundColor,
+        boxShadow:
+            shadow && `0 ${shadow}px ${shadow * 1.5}px rgba(0, 0, 0, 0.15)`,
         flex: flex ?? undefined,
-        cursor: onClick ? 'pointer' : 'default'
-    }
+        cursor: onClick ? "pointer" : "default",
+    };
 
     if (paddingTop || paddingBottom || paddingLeft || paddingRight) {
         wrapperStyles.padding = undefined;
@@ -68,35 +70,48 @@ export const DefaultWidgetShape = ({
         backgroundColor: backgroundColorBlock ?? undefined,
         paddingTop: paddingTopBlock ?? undefined,
         paddingBottom: paddingBottomBlock ?? undefined,
-        paddingLeft: isMobile ? "4px" : paddingLeftBlock ?? undefined,
-        paddingRight: isMobile ? "4px" : paddingRightBlock ?? undefined,
-        ...(padding && !(paddingTopBlock || paddingBottomBlock || paddingLeftBlock || paddingRightBlock)
-            ? { paddingBlock }
+        paddingLeft: isMobile ? (paddingLeftBlock ?? "4px") : paddingLeftBlock,
+        paddingRight: isMobile
+            ? (paddingRightBlock ?? "4px")
+            : paddingRightBlock,
+        ...(paddingBlock &&
+        !(
+            paddingTopBlock ||
+            paddingBottomBlock ||
+            paddingLeftBlock ||
+            paddingRightBlock
+        )
+            ? { padding: paddingBlock }
             : {}),
         flexDirection: flexDirection ?? undefined,
         display: display ?? undefined,
         overflow: overflowBlock ?? undefined,
-    }
+    };
 
     const titleStyles = {
         textAlign: justifyTitle,
-    }
+    };
 
     return (
-        <div className={`${s.wrapper} ${animated ? s.animated : ''}`} style={wrapperStyles}>
-            {!noTitle || isMobile && <DefaultTitle title={title} titleStyles={titleStyles} onClick={onClick} />}
+        <div
+            className={`${s.wrapper} ${animated ? s.animated : ""}`}
+            style={wrapperStyles}
+        >
+            {!noTitle && (
+                <DefaultTitle
+                    title={title}
+                    titleStyles={titleStyles}
+                    onClick={onClick}
+                />
+            )}
 
-            {noBlock ?
-                <>
-                    {children}
-                </>
-                :
+            {noBlock ? (
+                <>{children}</>
+            ) : (
                 <div className={s.mainBlock} style={blockStyles}>
                     {children}
                 </div>
-            }
-
-
+            )}
         </div>
-    )
-}
+    );
+};
