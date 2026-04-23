@@ -1,16 +1,15 @@
-// GoogleLoginYouTube.jsx
 import { useSelector } from "react-redux";
 import { DefaultButton } from "../../../../shared/ui";
 import s from "./GoogleLoginYouTube.module.scss";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { selectYoutubeAccessToken } from "../../../../entities/connection/model/slice";
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const REDIRECT_URI = import.meta.env.VITE_GOOGLE_REDIRECT_URI;
-
+const CLIENT_SECRET = import.meta.env.VITE_GOOGLE_CLIENT_SECRET;
+const OAUTH_PORT = 3456;
+const REDIRECT_URI = `http://127.0.0.1:${OAUTH_PORT}/oauth2callback`;
 const SCOPES = ["https://www.googleapis.com/auth/youtube.readonly"].join(" ");
 
-// Генерация code_verifier и code_challenge для PKCE
 const generateCodeVerifier = () => {
     const array = new Uint8Array(32);
     crypto.getRandomValues(array);
@@ -33,58 +32,86 @@ const generateCodeChallenge = async (codeVerifier) => {
 export const GoogleLoginYouTube = ({ onAccessToken }) => {
     const youtubeAccessToken = useSelector(selectYoutubeAccessToken);
     const [loading, setLoading] = useState(false);
-    const [isAlreadySignIn, setIsAlreadySignIn] = useState(
-        youtubeAccessToken ? true : false,
+    const [isAlreadySignIn, setIsAlreadySignIn] =
+        useState(!!youtubeAccessToken);
+
+    const exchangeCodeForToken = useCallback(
+        async (code, codeVerifier) => {
+            try {
+                const tokenUrl = "https://oauth2.googleapis.com/token";
+                const params = new URLSearchParams({
+                    client_id: CLIENT_ID,
+                    client_secret: CLIENT_SECRET, // добавить
+                    redirect_uri: REDIRECT_URI,
+                    grant_type: "authorization_code",
+                    code,
+                    code_verifier: codeVerifier,
+                });
+
+                const response = await fetch(tokenUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: params.toString(),
+                });
+
+                const data = await response.json();
+
+                if (data.access_token) {
+                    if (onAccessToken && typeof onAccessToken === "function") {
+                        onAccessToken(data.access_token);
+                    }
+                    return data.access_token;
+                } else {
+                    console.error("Token exchange failed:", data);
+                    throw new Error("Failed to get access token");
+                }
+            } catch (error) {
+                console.error("Error exchanging code for token:", error);
+                throw error;
+            }
+        },
+        [onAccessToken],
     );
 
-    const exchangeCodeForToken = async (code, codeVerifier) => {
-        try {
-            const tokenUrl = "https://oauth2.googleapis.com/token";
-            const params = new URLSearchParams({
-                client_id: CLIENT_ID,
-                redirect_uri: REDIRECT_URI,
-                grant_type: "authorization_code",
-                code: code,
-                code_verifier: codeVerifier,
-            });
-
-            const response = await fetch(tokenUrl, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: params.toString(),
-            });
-
-            const data = await response.json();
-
-            if (data.access_token) {
-                if (onAccessToken && typeof onAccessToken === "function") {
-                    onAccessToken(data.access_token);
+    const handleOAuthCode = useCallback(
+        async (code) => {
+            const savedVerifier = sessionStorage.getItem(
+                "google_code_verifier",
+            );
+            if (savedVerifier) {
+                try {
+                    await exchangeCodeForToken(code, savedVerifier);
+                } finally {
+                    setLoading(false);
+                    sessionStorage.removeItem("google_code_verifier");
                 }
-                return data.access_token;
             } else {
-                console.error("Token exchange failed:", data);
-                throw new Error("Failed to get access token");
+                setLoading(false);
             }
-        } catch (error) {
-            console.error("Error exchanging code for token:", error);
-            throw error;
-        }
-    };
+        },
+        [exchangeCodeForToken],
+    );
+
+    useEffect(() => {
+        const unsubscribe = window.electronAPI.onGoogleOAuthCode((code) => {
+            handleOAuthCode(code);
+        });
+
+        return () => {
+            if (unsubscribe) unsubscribe();
+        };
+    }, [handleOAuthCode]);
 
     const handleLogin = async () => {
         setLoading(true);
 
         try {
-            // Генерируем PKCE параметры
             const codeVerifier = generateCodeVerifier();
             const codeChallenge = await generateCodeChallenge(codeVerifier);
-
-            // Сохраняем codeVerifier для последующего обмена
             sessionStorage.setItem("google_code_verifier", codeVerifier);
 
-            // Используем Authorization Code Flow (response_type=code)
             const authUrl =
                 `https://accounts.google.com/o/oauth2/v2/auth?` +
                 `client_id=${CLIENT_ID}` +
@@ -96,73 +123,11 @@ export const GoogleLoginYouTube = ({ onAccessToken }) => {
                 `&code_challenge=${codeChallenge}` +
                 `&code_challenge_method=S256`;
 
-            const width = 500,
-                height = 600;
-            const left = window.screen.width / 2 - width / 2;
-            const top = window.screen.height / 2 - height / 2;
-            const authWindow = window.open(
-                authUrl,
-                "googleLogin",
-                `width=${width},height=${height},top=${top},left=${left}`,
-            );
+            window.electronAPI.openExternal(authUrl); // Теперь это надёжный IPC-вызов
 
-            // Функция для обработки редиректа
-            const handleRedirect = (event) => {
-                // Проверяем, что это наш редирект
-                if (event.origin !== window.location.origin) return;
-
-                // Закрываем попап и обрабатываем код
-                if (authWindow && !authWindow.closed) {
-                    authWindow.close();
-                }
-
-                // Получаем код из URL (при редиректе на нашу страницу)
-                const urlParams = new URLSearchParams(window.location.search);
-                const code = urlParams.get("code");
-                const error = urlParams.get("error");
-
-                if (code) {
-                    const savedVerifier = sessionStorage.getItem(
-                        "google_code_verifier",
-                    );
-                    exchangeCodeForToken(code, savedVerifier)
-                        .then(() => {
-                            setLoading(false);
-                            // Очищаем URL от параметров
-                            window.history.replaceState(
-                                {},
-                                document.title,
-                                window.location.pathname,
-                            );
-                        })
-                        .catch(() => {
-                            setLoading(false);
-                        });
-                } else if (error) {
-                    console.error("Auth error:", error);
-                    setLoading(false);
-                }
-
-                window.removeEventListener("message", handleRedirect);
-            };
-
-            // Слушаем изменения URL (для редиректа)
-            window.addEventListener("popstate", handleRedirect);
-
-            // Также проверяем URL сразу после открытия окна
-            const checkInterval = setInterval(() => {
-                if (authWindow && authWindow.closed) {
-                    clearInterval(checkInterval);
-                    // Проверяем URL при закрытии попапа
-                    const urlParams = new URLSearchParams(
-                        window.location.search,
-                    );
-                    const code = urlParams.get("code");
-                    if (!code) {
-                        setLoading(false);
-                    }
-                }
-            }, 500);
+            setTimeout(() => {
+                if (loading) setLoading(false);
+            }, 120000);
         } catch (error) {
             console.error("Login error:", error);
             setLoading(false);
@@ -170,7 +135,7 @@ export const GoogleLoginYouTube = ({ onAccessToken }) => {
     };
 
     useEffect(() => {
-        setIsAlreadySignIn(youtubeAccessToken ? true : false);
+        setIsAlreadySignIn(!!youtubeAccessToken);
     }, [youtubeAccessToken]);
 
     return (

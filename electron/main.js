@@ -1,12 +1,15 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, shell } from "electron";
 import path from "path";
 import { fileURLToPath } from "url";
+import { startOAuthServer, stopOAuthServer } from "./oauthServer.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-function createWindow() {
-    const win = new BrowserWindow({
+let mainWindow = null;
+
+async function createWindow() {
+    mainWindow = new BrowserWindow({
         width: 1280,
         height: 960,
         frame: false,
@@ -18,15 +21,18 @@ function createWindow() {
         },
     });
 
-    const isDev = !app.isPackaged;
+    // Запускаем OAuth сервер до загрузки окна
+    await startOAuthServer(mainWindow);
 
+    const isDev = !app.isPackaged;
     if (isDev) {
-        win.loadURL("http://localhost:5173");
+        mainWindow.loadURL("http://localhost:5173");
     } else {
-        win.loadFile(path.join(__dirname, "../dist/index.html"));
+        mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
     }
 }
 
+// Стандартные IPC
 ipcMain.on("window-close", (event) => {
     event.sender.getOwnerBrowserWindow().close();
 });
@@ -44,10 +50,20 @@ ipcMain.on("window-maximize", (event) => {
     }
 });
 
+ipcMain.on("open-external", (event, url) => {
+    // Безопасно открываем ссылку в системном браузере
+    shell.openExternal(url);
+});
+
 app.whenReady().then(createWindow);
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+app.on("window-all-closed", () => {
+    stopOAuthServer();
+    if (process.platform !== "darwin") {
+        app.quit();
+    }
+});
+
+app.on("before-quit", () => {
+    stopOAuthServer();
 });
