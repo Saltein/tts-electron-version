@@ -20,6 +20,7 @@ import ChatsIcon from "../../../shared/assets/icons/chats.svg?react";
 import TTSIcon from "../../../shared/assets/icons/tts.svg?react";
 import SettingsIcon from "../../../shared/assets/icons/settings.svg?react";
 import { useMediaQuery } from "react-responsive";
+import { mobileBreakpoint } from "../../../shared/styles/consts";
 
 export const NavPanel = () => {
     const currentPageID = useSelector(selectNavPanelCurrentPageID);
@@ -32,7 +33,7 @@ export const NavPanel = () => {
     const [isRoomWidgetOpen, setIsRoomWidgetOpen] = useState(false);
     const [isNavWidgetOpen, setIsNavWidgetOpen] = useState(true);
 
-    const isMobile = useMediaQuery({ maxWidth: "960px"});
+    const isMobile = useMediaQuery({ maxWidth: mobileBreakpoint });
 
     const handleOpenBeta = () => {
         if (password === betaAccessPass) {
@@ -59,7 +60,7 @@ export const NavPanel = () => {
     );
 
     return (
-        <div className={s.wrapper}>
+        <div className={`${s.wrapper} ${isMobile ? s.mobile : ""}`}>
             <DefaultWidgetShape
                 width={"256px"}
                 height={isNavWidgetOpen ? "fit-content" : "56px"}

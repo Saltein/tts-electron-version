@@ -1,4 +1,12 @@
-@import '../../../shared/styles/variables.scss';
+@import "../../../shared/styles/variables.scss";
+
+.wrapper {
+    margin-top: 0;
+
+    &.mobile {
+        margin-top: 54px;
+    }
+}
 
 .buttons {
     display: flex;
