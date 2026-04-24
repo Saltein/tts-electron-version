@@ -93,7 +93,10 @@ export const ConnectionCard = ({
                 {isModalOpen && (
                     <DefaultModalWindow
                         title={title}
-                        onClose={() => setIsModalOpen(false)}
+                        onClose={() => {
+                            setIsModalOpen(false);
+                            handleSubmit();
+                        }}
                         backgroundColor={"var(--color-background)"}
                         padding={"0"}
                     >

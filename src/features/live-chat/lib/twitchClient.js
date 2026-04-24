@@ -18,7 +18,14 @@ export function connectTwitchChat({ token, botNick, channel }) {
         channels: [channel?.chatChannelName || channel],
     });
 
-    client.connect();
+    client.connect().catch((err) => {
+        console.error("❌ Ошибка подключения к Twitch:", err);
+        return;
+    });
+
+    client.on("error", (err) => {
+        console.error("❌ Twitch error:", err);
+    });
 
     client.on("connected", () => {
         console.log(`✅ Подключено к чату Twitch (#${channel})`);
@@ -36,8 +43,17 @@ export function connectTwitchChat({ token, botNick, channel }) {
         console.log("🔐 Логин успешен");
     });
 
-    client.on("error", (err) => {
-        console.error("❌ Twitch error:", err);
+    let joined = false;
+
+    client.on("join", (ch, username, self) => {
+        if (self) {
+            joined = true;
+            console.log("✅ Успешно подключились к каналу:", ch);
+        }
+    });
+
+    client.on("notice", (channel, msgid, message) => {
+        console.warn("⚠️ NOTICE:", msgid, message);
     });
 
     return client;

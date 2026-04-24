@@ -19,6 +19,7 @@ import {
 import {
     connectTwitchClient,
     disconnectTwitchClient,
+    getTwitchClient,
 } from "../../../../features/live-chat/lib/twitchClientSingleton";
 import {
     connectVkPlayClient,
@@ -60,8 +61,10 @@ export const ConnectionSwitch = ({ serviceName = "", isActive = true }) => {
         else if (serviceName === "VK Видео Live") return vkConnectionStatus;
     };
 
-    const [isSwitchOn, setIsSwitchOn] = useState(getConnectionStatus());
     const [isSwitchLoading, setIsSwitchLoading] = useState(false);
+    const [twitchJoined, setTwitchJoined] = useState(false);
+    const [youtubeJoined, setYoutubeJoined] = useState(false);
+    const [vkJoined, setVkJoined] = useState(false);
 
     const clientRef = useRef(null);
 
@@ -72,31 +75,56 @@ export const ConnectionSwitch = ({ serviceName = "", isActive = true }) => {
             const isYoutubeConnected =
                 youtubeClient && youtubeClient.isConnected;
 
-            if (isYoutubeConnected !== isSwitchOn) {
-                setIsSwitchOn(isYoutubeConnected);
+            if (isYoutubeConnected !== getConnectionStatus()) {
                 setIsSwitchLoading(false);
             }
         }
-    }, [serviceName, isSwitchOn]);
+        if (serviceName === "Twitch") {
+            const twitchClient = getTwitchClient();
+            const isTwitchConnected = twitchClient && twitchClient.isConnected;
+
+            if (isTwitchConnected !== getConnectionStatus()) {
+                setIsSwitchLoading(false);
+            }
+        }
+    }, [serviceName, getConnectionStatus()]);
+
+    useEffect(() => {
+        let timer;
+        if (isSwitchLoading) {
+            timer = setTimeout(() => {
+                if (!twitchJoined) {
+                    setIsSwitchLoading(false);
+                    disconnectTwitchClient();
+                }
+                if (!youtubeJoined) {
+                    setIsSwitchLoading(false);
+                    disconnectYouTubeClient();
+                }
+                if (!vkJoined) {
+                    setIsSwitchLoading(false);
+                    disconnectVkPlayClient();
+                }
+            }, 10000);
+        }
+        return () => clearTimeout(timer);
+    }, [isSwitchLoading]);
 
     const handleConnect = async () => {
-        if (isSwitchOn) {
+        if (getConnectionStatus()) {
             // Отключение
             if (serviceName === "Twitch") {
                 // Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch
                 disconnectTwitchClient();
-                setIsSwitchOn(false);
                 dispatch(setTwitchConnectionStatus(false));
                 setIsSwitchLoading(false);
             } else if (serviceName === "VK Видео Live") {
                 disconnectVkPlayClient();
-                setIsSwitchOn(false);
                 dispatch(setVkConnectionStatus(false));
                 setIsSwitchLoading(false);
             } else if (serviceName === "YouTube") {
                 setIsSwitchLoading(true);
                 disconnectYouTubeClient();
-                setIsSwitchOn(false);
                 dispatch(setYoutubeConnectionStatus(false));
                 setIsSwitchLoading(false);
             }
@@ -104,7 +132,6 @@ export const ConnectionSwitch = ({ serviceName = "", isActive = true }) => {
             // Включение
             if (serviceName === "Twitch") {
                 setIsSwitchLoading(true);
-                dispatch(setTwitchConnectionStatus(true));
 
                 const client = connectTwitchClient({
                     token: twitchBotToken,
@@ -126,13 +153,21 @@ export const ConnectionSwitch = ({ serviceName = "", isActive = true }) => {
                         );
                     });
 
-                    client.on("connected", () => {
-                        setIsSwitchOn(true);
+                    client.on("notice", (error) => {
+                        setTwitchJoined(false);
+                        console.error("Twitch error:", error);
+                        dispatch(setTwitchConnectionStatus(false));
                         setIsSwitchLoading(false);
                     });
 
+                    client.on("join", () => {
+                        setTwitchJoined(true);
+                        setIsSwitchLoading(false);
+                        dispatch(setTwitchConnectionStatus(true));
+                    });
+
                     client.on("disconnected", () => {
-                        setIsSwitchOn(false);
+                        setTwitchJoined(false);
                         dispatch(setTwitchConnectionStatus(false));
                         setIsSwitchLoading(false);
                     });
@@ -142,20 +177,20 @@ export const ConnectionSwitch = ({ serviceName = "", isActive = true }) => {
             } else if (serviceName === "VK Видео Live") {
                 // VK Видео Live VK Видео Live VK Видео Live VK Видео Live VK Видео Live VK Видео Live VK Видео Live VK Видео Live VK Видео Live
                 setIsSwitchLoading(true);
-                dispatch(setVkConnectionStatus(true));
 
                 const callbacks = {
                     onChatMessage: (msg) => {
                         dispatch(setNewVkMessage(msg));
                     },
                     onConnected: () => {
-                        setIsSwitchOn(true);
                         setIsSwitchLoading(false);
+                        dispatch(setVkConnectionStatus(true));
+                        setVkJoined(true);
                     },
                     onDisconnected: () => {
-                        setIsSwitchOn(false);
                         dispatch(setVkConnectionStatus(false));
                         setIsSwitchLoading(false);
+                        setVkJoined(false);
                     },
                 };
 
@@ -174,21 +209,20 @@ export const ConnectionSwitch = ({ serviceName = "", isActive = true }) => {
             } else if (serviceName === "YouTube") {
                 // YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube
                 setIsSwitchLoading(true);
-                dispatch(setYoutubeConnectionStatus(true));
 
                 const callbacks = {
                     onChatMessage: (msg) => {
                         dispatch(setNewYoutubeMessage(msg));
                     },
                     onConnected: () => {
-                        setIsSwitchOn(true);
                         setIsSwitchLoading(false);
                         dispatch(setYoutubeConnectionStatus(true));
+                        setYoutubeJoined(true);
                     },
                     onDisconnected: () => {
-                        setIsSwitchOn(false);
                         setIsSwitchLoading(false);
                         dispatch(setYoutubeConnectionStatus(false));
+                        setYoutubeJoined(false);
                     },
                 };
 
@@ -219,7 +253,7 @@ export const ConnectionSwitch = ({ serviceName = "", isActive = true }) => {
 
     return (
         <div
-            className={`${s.wrapper} ${isSwitchLoading ? s.loading : ""} ${isSwitchOn ? s.on : ""}`}
+            className={`${s.wrapper} ${isSwitchLoading ? s.loading : ""} ${getConnectionStatus() ? s.on : ""}`}
             onClick={isActive ? handleConnect : () => {}}
         >
             <div className={s.switch} />
