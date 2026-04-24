@@ -19,7 +19,7 @@ export const ConnectionsPage = () => {
         {
             name: "chatChannelName",
             placeholder: "Название канала",
-            info: "Название канала twitch",
+            info: "Ссылка на канал Twitch или его название",
             type: "text",
         },
     ];

@@ -1,4 +1,4 @@
-import { connectYouTubeChat, getLiveChatIdFromVideo } from './youtubeClient';
+import { connectYouTubeChat, getLiveChatIdFromVideo } from "./youtubeClient";
 
 let client = null;
 let currentOptions = null;
@@ -12,6 +12,8 @@ export function getYouTubeClient() {
 }
 
 export async function connectYouTubeClient(options, callbacks = {}) {
+    console.log("options", options);
+
     // Если уже есть подключенный клиент, отключаем его
     if (client) {
         disconnectYouTubeClient();
@@ -21,7 +23,7 @@ export async function connectYouTubeClient(options, callbacks = {}) {
     let liveChatId = options.liveChatId;
     if (!liveChatId && options.videoId) {
         liveChatId = await getLiveChatIdFromVideo({
-            videoId: options.videoId
+            videoId: options.videoId,
         });
 
         if (!liveChatId) {
@@ -34,7 +36,9 @@ export async function connectYouTubeClient(options, callbacks = {}) {
     }
 
     if (!liveChatId) {
-        console.error("❌ Не указан liveChatId и нет videoId для его получения");
+        console.error(
+            "❌ Не указан liveChatId и нет videoId для его получения",
+        );
         if (callbacks.onDisconnected) {
             callbacks.onDisconnected();
         }
@@ -52,7 +56,7 @@ export async function connectYouTubeClient(options, callbacks = {}) {
     // Создаем нового клиента
     const clientOptions = {
         ...options,
-        liveChatId: liveChatId
+        liveChatId: liveChatId,
     };
 
     try {
@@ -95,6 +99,8 @@ export function sendYouTubeMessage(messageText) {
     if (client && client.sendMessage) {
         return client.sendMessage(messageText);
     }
-    console.error("❌ YouTube клиент недоступен или не поддерживает отправку сообщений");
+    console.error(
+        "❌ YouTube клиент недоступен или не поддерживает отправку сообщений",
+    );
     return false;
 }

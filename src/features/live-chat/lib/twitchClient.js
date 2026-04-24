@@ -1,13 +1,12 @@
 // twitchClient.js
-import tmi from "tmi.js"
+import tmi from "tmi.js";
 
 export function connectTwitchChat({ token, botNick, channel }) {
-
-    console.warn("connectTwitchChat channel", channel)
+    console.warn("connectTwitchChat channel", channel);
 
     if (!token || !botNick || !channel) {
-        console.error("Нет данных для подключения к Twitch")
-        return null
+        console.error("Нет данных для подключения к Twitch");
+        return null;
     }
 
     const client = new tmi.Client({
@@ -16,18 +15,30 @@ export function connectTwitchChat({ token, botNick, channel }) {
             username: botNick,
             password: token.startsWith("oauth:") ? token : `oauth:${token}`,
         },
-        channels: [channel?.chatChannelName],
-    })
+        channels: [channel?.chatChannelName || channel],
+    });
 
-    client.connect()
+    client.connect();
 
     client.on("connected", () => {
         console.log(`✅ Подключено к чату Twitch (#${channel})`);
-    })
+    });
 
     client.on("disconnected", (reason) => {
-        console.warn(`⚠️ Отключено от Twitch: ${reason}`)
-    })
+        console.warn(`⚠️ Отключено от Twitch: ${reason}`);
+    });
 
-    return client
+    client.on("connecting", () => {
+        console.log("🔄 Подключение к Twitch...");
+    });
+
+    client.on("logon", () => {
+        console.log("🔐 Логин успешен");
+    });
+
+    client.on("error", (err) => {
+        console.error("❌ Twitch error:", err);
+    });
+
+    return client;
 }
