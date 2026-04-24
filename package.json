@@ -28,6 +28,23 @@
             "main": "electron/main.js"
         },
         "asar": true,
+        "asarUnpack": [
+            "electron/tts_server/**/*"
+        ],
+        "extraResources": [
+            {
+                "from": "electron/tts_server",
+                "to": "electron/tts_server",
+                "filter": [
+                    "**/*"
+                ]
+            }
+        ],
+        "files": [
+            "dist/**/*",
+            "electron/**/*",
+            "!electron/tts_server/**/*"
+        ],
         "win": {
             "target": "nsis",
             "icon": "public/icon.ico"

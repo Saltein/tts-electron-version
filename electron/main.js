@@ -11,30 +11,116 @@ const __dirname = path.dirname(__filename);
 let mainWindow = null;
 let ttsServerProcess = null;
 
+// Функция для получения правильного пути к TTS серверу в production
+function getTTSServerPath() {
+    const isDev = !app.isPackaged;
+
+    if (isDev) {
+        // В режиме разработки - из папки electron/tts_server
+        return path.join(__dirname, "tts_server", "tts-chat-server.exe");
+    } else {
+        // В production - из resources/app.asar.unpacked или resources/electron/tts_server
+        // Путь зависит от того, как упакован exe файл
+
+        // Вариант 1: exe находится в ресурсах рядом с app.asar
+        const possiblePaths = [
+            path.join(
+                process.resourcesPath,
+                "app.asar.unpacked",
+                "electron",
+                "tts_server",
+                "tts-chat-server.exe",
+            ),
+            path.join(
+                process.resourcesPath,
+                "electron",
+                "tts_server",
+                "tts-chat-server.exe",
+            ),
+            path.join(
+                path.dirname(app.getPath("exe")),
+                "resources",
+                "electron",
+                "tts_server",
+                "tts-chat-server.exe",
+            ),
+            path.join(__dirname, "tts_server", "tts-chat-server.exe"), // fallback
+        ];
+
+        for (const testPath of possiblePaths) {
+            if (fs.existsSync(testPath)) {
+                console.log(`Found TTS server at: ${testPath}`);
+                return testPath;
+            }
+        }
+
+        // Если не нашли, возвращаем путь по умолчанию
+        return path.join(
+            process.resourcesPath,
+            "electron",
+            "tts_server",
+            "tts-chat-server.exe",
+        );
+    }
+}
+
 // Функция для запуска TTS сервера
 async function startTTSServer() {
-    console.log("Starting TTS server...");
-    const serverPath = path.join(
-        __dirname,
-        "tts_server",
-        "tts-chat-server.exe",
-    );
+    const serverPath = getTTSServerPath();
 
     // Проверяем существует ли файл
     if (!fs.existsSync(serverPath)) {
         console.error(`TTS server not found at: ${serverPath}`);
+        console.log("Resources path:", process.resourcesPath);
+        console.log("App path:", app.getAppPath());
+        console.log("Exe path:", app.getPath("exe"));
+
+        // Попробуем вывести список файлов в resources для отладки
+        try {
+            if (fs.existsSync(process.resourcesPath)) {
+                const files = fs.readdirSync(process.resourcesPath);
+                console.log("Files in resources:", files);
+
+                // Проверяем наличие папки electron
+                const electronPath = path.join(
+                    process.resourcesPath,
+                    "electron",
+                );
+                if (fs.existsSync(electronPath)) {
+                    const electronFiles = fs.readdirSync(electronPath);
+                    console.log("Files in resources/electron:", electronFiles);
+
+                    const ttsPath = path.join(electronPath, "tts_server");
+                    if (fs.existsSync(ttsPath)) {
+                        const ttsFiles = fs.readdirSync(ttsPath);
+                        console.log(
+                            "Files in resources/electron/tts_server:",
+                            ttsFiles,
+                        );
+                    }
+                }
+            }
+        } catch (err) {
+            console.error("Error listing resources:", err);
+        }
+
         return false;
     }
 
     return new Promise((resolve, reject) => {
         try {
-            // Запускаем exe файл
+            console.log(`Starting TTS server from: ${serverPath}`);
+
+            // Запускаем exe файл с правильной рабочей директорией
+            const serverDir = path.dirname(serverPath);
             ttsServerProcess = spawn(serverPath, [], {
-                detached: false, // false чтобы процесс закрывался при закрытии приложения
-                stdio: ["ignore", "pipe", "pipe"], // перехватываем stdout и stderr
+                cwd: serverDir, // Устанавливаем рабочую директорию
+                detached: false,
+                stdio: ["ignore", "pipe", "pipe"],
+                windowsHide: true, // Скрываем окно консоли на Windows
             });
 
-            // Логируем вывод сервера (опционально)
+            // Логируем вывод сервера
             ttsServerProcess.stdout.on("data", (data) => {
                 console.log(`[TTS Server]: ${data}`);
             });
@@ -67,8 +153,23 @@ function stopTTSServer() {
     if (ttsServerProcess && !ttsServerProcess.killed) {
         console.log("Stopping TTS server...");
 
-        // Пытаемся завершить процесс
-        ttsServerProcess.kill("SIGTERM");
+        // На Windows лучше использовать taskkill для завершения процесса со всеми дочерними
+        if (process.platform === "win32") {
+            const pid = ttsServerProcess.pid;
+            if (pid) {
+                exec(`taskkill /pid ${pid} /f /t`, (error) => {
+                    if (error) {
+                        console.error(
+                            "Error killing TTS server process tree:",
+                            error,
+                        );
+                        ttsServerProcess.kill("SIGKILL");
+                    }
+                });
+            }
+        } else {
+            ttsServerProcess.kill("SIGTERM");
+        }
 
         // Принудительное завершение через 5 секунд, если не закрылся
         setTimeout(() => {
@@ -99,10 +200,18 @@ async function createWindow() {
 
     // Запускаем TTS сервер
     try {
-        await startTTSServer();
+        const started = await startTTSServer();
+        if (!started) {
+            console.error("TTS server failed to start");
+            // Можно показать диалог об ошибке пользователю
+            mainWindow.webContents.send(
+                "tts-server-error",
+                "Failed to start TTS server",
+            );
+        }
     } catch (error) {
         console.error("Failed to start TTS server:", error);
-        // Можно показать диалог об ошибке пользователю
+        mainWindow.webContents.send("tts-server-error", error.message);
     }
 
     const isDev = !app.isPackaged;
@@ -113,7 +222,7 @@ async function createWindow() {
     }
 }
 
-// Остальные IPC обработчики остаются без изменений
+// Остальные IPC обработчики
 ipcMain.on("window-close", (event) => {
     event.sender.getOwnerBrowserWindow().close();
 });
@@ -138,7 +247,7 @@ ipcMain.on("open-external", (event, url) => {
 app.whenReady().then(createWindow);
 
 app.on("window-all-closed", () => {
-    stopTTSServer(); // Останавливаем TTS сервер
+    stopTTSServer();
     stopOAuthServer();
     if (process.platform !== "darwin") {
         app.quit();
@@ -146,11 +255,10 @@ app.on("window-all-closed", () => {
 });
 
 app.on("before-quit", () => {
-    stopTTSServer(); // Останавливаем TTS сервер
+    stopTTSServer();
     stopOAuthServer();
 });
 
-// Опционально: обработка события закрытия приложения
 app.on("will-quit", () => {
     stopTTSServer();
 });
