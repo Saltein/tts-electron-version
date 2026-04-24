@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
     selectSpeechVolume,
@@ -23,6 +23,20 @@ export const TTSPage = () => {
 
     const baseUrl = import.meta.env.VITE_BASE_URL_API || "";
     const [optionList, setOptionList] = useState([]);
+
+    const [switchDisabled, setSwitchDisabled] = useState(false);
+
+    const prevIsTwitchTTSOn = useRef(isTwitchTTSOn);
+
+    useEffect(() => {
+        if (prevIsTwitchTTSOn.current !== isTwitchTTSOn) {
+            prevIsTwitchTTSOn.current = isTwitchTTSOn;
+            setSwitchDisabled(true);
+            setTimeout(() => {
+                setSwitchDisabled(false);
+            }, 5000);
+        }
+    }, [isTwitchTTSOn]);
 
     // Функция синхронизации состояния сервера с переключателем
     const syncTTSServer = async (enabled) => {
@@ -98,6 +112,7 @@ export const TTSPage = () => {
                     <DefaultSwitch
                         state={isTwitchTTSOn}
                         onSwitch={handleSwitch}
+                        disabled={switchDisabled}
                     />
                 </DefaultOption>
                 <div className={s.settingsBlock}>
