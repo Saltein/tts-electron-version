@@ -19,11 +19,6 @@
         "directories": {
             "output": "release"
         },
-        "files": [
-            "dist/**/*",
-            "electron/**/*",
-            "package.json"
-        ],
         "extraMetadata": {
             "main": "electron/main.js"
         },
@@ -43,6 +38,7 @@
         "files": [
             "dist/**/*",
             "electron/**/*",
+            "package.json",
             "!electron/tts_server/**/*"
         ],
         "win": {
