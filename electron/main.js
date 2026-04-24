@@ -150,36 +150,44 @@ async function startTTSServer() {
 
 // Функция для остановки TTS сервера
 function stopTTSServer() {
-    if (ttsServerProcess && !ttsServerProcess.killed) {
-        console.log("Stopping TTS server...");
-
-        // На Windows лучше использовать taskkill для завершения процесса со всеми дочерними
-        if (process.platform === "win32") {
-            const pid = ttsServerProcess.pid;
-            if (pid) {
-                exec(`taskkill /pid ${pid} /f /t`, (error) => {
-                    if (error) {
-                        console.error(
-                            "Error killing TTS server process tree:",
-                            error,
-                        );
-                        ttsServerProcess.kill("SIGKILL");
-                    }
-                });
-            }
-        } else {
-            ttsServerProcess.kill("SIGTERM");
+    return new Promise((resolve) => {
+        if (!ttsServerProcess || ttsServerProcess.killed) {
+            ttsServerProcess = null;
+            resolve();
+            return;
         }
 
-        // Принудительное завершение через 5 секунд, если не закрылся
-        setTimeout(() => {
-            if (ttsServerProcess && !ttsServerProcess.killed) {
-                ttsServerProcess.kill("SIGKILL");
-            }
-        }, 5000);
+        console.log("Stopping TTS server...");
+        const pid = ttsServerProcess.pid;
 
-        ttsServerProcess = null;
-    }
+        const cleanup = () => {
+            ttsServerProcess = null;
+            resolve();
+        };
+
+        if (process.platform === "win32") {
+            exec(`taskkill /pid ${pid} /f /t`, (error) => {
+                if (error) {
+                    console.error(
+                        "Error killing TTS server process tree:",
+                        error,
+                    );
+                    try {
+                        process.kill(pid, "SIGKILL");
+                    } catch (e) {}
+                }
+                cleanup();
+            });
+        } else {
+            ttsServerProcess.kill("SIGTERM");
+            setTimeout(() => {
+                if (ttsServerProcess && !ttsServerProcess.killed) {
+                    ttsServerProcess.kill("SIGKILL");
+                }
+                cleanup();
+            }, 5000);
+        }
+    });
 }
 
 async function createWindow() {
@@ -198,22 +206,6 @@ async function createWindow() {
     // Запускаем OAuth сервер
     await startOAuthServer(mainWindow);
 
-    // Запускаем TTS сервер
-    try {
-        const started = await startTTSServer();
-        if (!started) {
-            console.error("TTS server failed to start");
-            // Можно показать диалог об ошибке пользователю
-            mainWindow.webContents.send(
-                "tts-server-error",
-                "Failed to start TTS server",
-            );
-        }
-    } catch (error) {
-        console.error("Failed to start TTS server:", error);
-        mainWindow.webContents.send("tts-server-error", error.message);
-    }
-
     const isDev = !app.isPackaged;
     if (isDev) {
         mainWindow.loadURL("http://localhost:5173");
@@ -221,6 +213,32 @@ async function createWindow() {
         mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
     }
 }
+
+// включение - выключение TTS сервера
+ipcMain.handle("tts-start", async (event) => {
+    if (ttsServerProcess && !ttsServerProcess.killed) {
+        console.log("TTS server is already running");
+        return true;
+    }
+    try {
+        await startTTSServer();
+        return true;
+    } catch (error) {
+        console.error("Failed to start TTS server:", error);
+        if (mainWindow) {
+            mainWindow.webContents.send("tts-server-error", error.message);
+        }
+        return false;
+    }
+});
+
+ipcMain.handle("tts-stop", async (event) => {
+    if (!ttsServerProcess || ttsServerProcess.killed) {
+        return true;
+    }
+    await stopTTSServer();
+    return true;
+});
 
 // Остальные IPC обработчики
 ipcMain.on("window-close", (event) => {

@@ -22,17 +22,49 @@ export const TTSPage = () => {
     const twitchVoice = useSelector(selectTwitchVoice);
 
     const baseUrl = import.meta.env.VITE_BASE_URL_API || "";
-
     const [optionList, setOptionList] = useState([]);
 
-    const handleSwitch = () => {
-        if (isTwitchTTSOn) {
-            dispatch(setTwitchTTSOn(false));
-        } else {
-            dispatch(setTwitchTTSOn(true));
+    // Функция синхронизации состояния сервера с переключателем
+    const syncTTSServer = async (enabled) => {
+        if (!window.electronAPI) return; // Запущено не в Electron (браузер)
+
+        try {
+            if (enabled) {
+                await window.electronAPI.startTTSServer();
+            } else {
+                await window.electronAPI.stopTTSServer();
+            }
+        } catch (error) {
+            console.error("Ошибка синхронизации TTS сервера:", error);
         }
     };
 
+    // При монтировании: если TTS уже включён (например, сохранённое состояние), запускаем сервер
+    useEffect(() => {
+        if (isTwitchTTSOn) {
+            syncTTSServer(true);
+        }
+
+        let unsubscribe;
+        if (window.electronAPI?.onTTSError) {
+            const errorHandler = (error) =>
+                console.error("TTS Server Error:", error);
+            unsubscribe = window.electronAPI.onTTSError(errorHandler);
+        }
+
+        return () => {
+            if (unsubscribe) unsubscribe();
+        };
+    }, []);
+
+    // Обработчик переключения свитча
+    const handleSwitch = async () => {
+        const newState = !isTwitchTTSOn;
+        dispatch(setTwitchTTSOn(newState));
+        await syncTTSServer(newState);
+    };
+
+    // Загрузка списка голосов с TTS сервера (без изменений)
     useEffect(() => {
         const fetchSpeakers = async () => {
             try {
@@ -50,12 +82,7 @@ export const TTSPage = () => {
         };
 
         fetchSpeakers();
-
-        // Если нужно очистить что-то при размонтировании:
-        return () => {
-            // cleanup, если есть
-        };
-    }, []);
+    }, [baseUrl]);
 
     return (
         <div className={s.wrapper}>

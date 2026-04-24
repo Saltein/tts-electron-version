@@ -16,4 +16,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
     removeAllListeners: (channel) => {
         ipcRenderer.removeAllListeners(channel);
     },
+
+    startTTSServer: () => ipcRenderer.invoke("tts-start"),
+    stopTTSServer: () => ipcRenderer.invoke("tts-stop"),
+    onTTSError: (callback) => {
+        const handler = (event, error) => callback(error);
+        ipcRenderer.on("tts-server-error", handler);
+        return () => ipcRenderer.removeListener("tts-server-error", handler);
+    },
 });
