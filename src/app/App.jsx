@@ -5,6 +5,7 @@ import { ChatWidget } from "../pages/Widgets/ChatWidget/ChatWidget";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { QRWidget } from "../pages/Widgets/QRWidget/QRWidget";
 import TgLogo from "../shared/assets/icons/telegram-logo-filled.svg";
+import { NoticeStack } from "../features/in-app-notices";
 
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
@@ -38,6 +39,7 @@ function App() {
 
     return (
         <GoogleOAuthProvider clientId={clientId}>
+            <NoticeStack />
             <div className={s.App}>
                 <GlobalPage />
             </div>

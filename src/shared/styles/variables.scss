@@ -48,6 +48,11 @@ $text-color: var(--color-text);
     --color-warning: #f97316; // Предупреждения
     --color-info: #3b82f6; // Информационные уведомления
 
+    --color-success-transparent: #e7fff0cc;
+    --color-error-transparent: #ffe7e7cc;
+    --color-warning-transparent: #fff1e6cc;
+    --color-info-transparent: #e8f0ffcc;
+
     // Специально для чата — оформление сообщений
     --chat-bubble-bg: #e5e7eb; // Фон сообщения собеседника
     --chat-bubble-user-bg: #10a37f; // Фон сообщения пользователя
@@ -95,6 +100,11 @@ $text-color: var(--color-text);
     --color-error: #ef4444;
     --color-warning: #f97316;
     --color-info: #3b82f6;
+
+    --color-success-transparent: #182c1fcc;
+    --color-error-transparent: #2e1a1acc;
+    --color-warning-transparent: #32251ccc;
+    --color-info-transparent: #1c2430cc;
 
     // Специально для чата — оформление сообщений
     --chat-bubble-bg: #2f2f2f; // Фон сообщения собеседника

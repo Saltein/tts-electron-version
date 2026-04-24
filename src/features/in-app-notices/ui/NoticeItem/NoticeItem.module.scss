@@ -1,0 +1,49 @@
+@use "../../../../shared/styles/variables.scss" as *;
+
+.wrapper_NoticeItem {
+    background-color: var(--color-surface);
+    border-radius: $border-radius-lg;
+    padding: $spacing-sm $spacing-md;
+    box-shadow: $shadow-sm;
+
+    backdrop-filter: blur(4px);
+
+    cursor: pointer;
+
+    width: 280px;
+
+    &.error {
+        background-color: var(--color-error-transparent);
+        color: var(--color-error);
+    }
+
+    &.warning {
+        background-color: var(--color-warning-transparent);
+        color: var(--color-warning);
+    }
+
+    &.info {
+        background-color: var(--color-info-transparent);
+        color: var(--color-info);
+    }
+
+    &.success {
+        background-color: var(--color-success-transparent);
+        color: var(--color-success);
+    }
+
+    &.animate {
+        animation: fade-out 0.5s ease-in-out;
+    }
+}
+
+@keyframes fade-out {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+}
