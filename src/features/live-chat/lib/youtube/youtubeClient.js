@@ -43,12 +43,13 @@ export function connectYouTubeChat(
         console.error(
             "❌ Отсутствуют обязательные параметры: accessToken и liveChatId",
         );
-        if (!accessToken) {
+        if (!accessToken && !liveChatId) {
             dispatch(
                 addNotice({
                     id: genRandStr(),
                     type: "error",
-                    message: "Войдите с помощью любого Google аккаунта",
+                    message:
+                        "Войдите с помощью любого Google аккаунта и укажите ссылку на прямую трансляцию или её ID",
                 }),
             );
         } else if (!liveChatId) {
@@ -59,13 +60,12 @@ export function connectYouTubeChat(
                     message: "Укажите ссылку на прямую трансляцию или её ID",
                 }),
             );
-        } else if (!accessToken || !liveChatId) {
+        } else if (!accessToken) {
             dispatch(
                 addNotice({
                     id: genRandStr(),
                     type: "error",
-                    message:
-                        "Войдите с помощью любого Google аккаунта и укажите ссылку на прямую трансляцию или её ID",
+                    message: "Войдите с помощью любого Google аккаунта",
                 }),
             );
         }

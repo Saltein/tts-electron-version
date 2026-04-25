@@ -9,7 +9,7 @@ export function getVkPlayClient() {
     return client;
 }
 
-export function connectVkPlayClient(options, callbacks = {}) {
+export function connectVkPlayClient(options, callbacks = {}, dispatch) {
     // Проверяем, нужно ли переподключаться
     const needsReconnect = !client ||
         currentOptions?.channelId !== options.channelId ||
@@ -25,7 +25,7 @@ export function connectVkPlayClient(options, callbacks = {}) {
         }
 
         // Создаем новое подключение
-        client = connectVkPlayChat(options);
+        client = connectVkPlayChat(options, dispatch);
         currentOptions = options;
         connectionCallbacks = callbacks;
 
@@ -58,12 +58,12 @@ export function isVkPlayClientConnected() {
 }
 
 // Добавляем функцию для переподключения
-export function reconnectVkPlayClient() {
+export function reconnectVkPlayClient(dispatch) {
     if (client && currentOptions) {
         const options = { ...currentOptions };
         const callbacks = { ...connectionCallbacks };
         disconnectVkPlayClient();
-        return connectVkPlayClient(options, callbacks);
+        return connectVkPlayClient(options, callbacks, dispatch);
     }
     return null;
 }

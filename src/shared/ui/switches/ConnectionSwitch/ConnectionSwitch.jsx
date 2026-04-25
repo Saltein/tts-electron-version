@@ -156,11 +156,14 @@ export const ConnectionSwitch = ({ serviceName = "", isActive = true }) => {
             if (serviceName === "Twitch") {
                 setIsSwitchLoading(true);
 
-                const client = connectTwitchClient({
-                    token: twitchBotToken,
-                    botNick: twitchBotName,
-                    channel: twitchChatChannelName,
-                }, dispatch);
+                const client = connectTwitchClient(
+                    {
+                        token: twitchBotToken,
+                        botNick: twitchBotName,
+                        channel: twitchChatChannelName,
+                    },
+                    dispatch,
+                );
 
                 if (client) {
                     clientRef.current = client;
@@ -209,25 +212,11 @@ export const ConnectionSwitch = ({ serviceName = "", isActive = true }) => {
                         setIsSwitchLoading(false);
                         dispatch(setVkConnectionStatus(true));
                         setVkJoined(true);
-                        dispatch(
-                            addNotice({
-                                id: genRandStr(),
-                                type: "success",
-                                message: "Подключено к VK Видео Live",
-                            }),
-                        );
                     },
                     onDisconnected: () => {
                         dispatch(setVkConnectionStatus(false));
                         setIsSwitchLoading(false);
                         setVkJoined(false);
-                        dispatch(
-                            addNotice({
-                                id: genRandStr(),
-                                type: "warning",
-                                message: "Отключено от VK Видео Live",
-                            }),
-                        );
                     },
                 };
 
@@ -238,6 +227,7 @@ export const ConnectionSwitch = ({ serviceName = "", isActive = true }) => {
                             token: vkConnectionData?.token,
                         },
                         callbacks,
+                        dispatch,
                     );
 
                     if (!client) {
@@ -256,15 +246,7 @@ export const ConnectionSwitch = ({ serviceName = "", isActive = true }) => {
                     const errorText = error?.message || String(error);
                     setIsSwitchLoading(false);
                     dispatch(setVkConnectionStatus(false));
-                    dispatch(
-                        addNotice({
-                            id: genRandStr(),
-                            type: "error",
-                            message: errorText.includes("properties")
-                                ? "Заполните поля ID и токена"
-                                : `Ошибка подключения к VK Видео Live: ${error}`,
-                        }),
-                    );
+                    console.error("❌ VK ошибка:", errorText);
                 }
             } else if (serviceName === "YouTube") {
                 // YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube
