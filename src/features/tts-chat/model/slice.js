@@ -73,7 +73,7 @@ const ttsSettingsSlice = createSlice({
         resetSettings: () => {
             const defaultState = {
                 common: { speechVolume: 50 },
-                twitch: { ttsOn: false, voice: "random" },
+                twitch: { ttsOn: true, voice: "random" },
             };
             saveToLocalStorage(defaultState);
             return defaultState;
