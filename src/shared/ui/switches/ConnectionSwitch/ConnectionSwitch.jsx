@@ -32,6 +32,8 @@ import {
 } from "../../../../features/live-chat/lib/youtube/youtubeClientSingleton";
 import { getTwitchChannelName } from "../../../lib/getTwitchChannelName";
 import { getYoutubeVideoId } from "../../../lib/getYoutubeVideoId";
+import { addNotice } from "../../../../features/in-app-notices/model/slice";
+import { genRandStr } from "../../../lib/genRandStr";
 
 export const ConnectionSwitch = ({ serviceName = "", isActive = true }) => {
     const dispatch = useDispatch();
@@ -93,17 +95,38 @@ export const ConnectionSwitch = ({ serviceName = "", isActive = true }) => {
         let timer;
         if (isSwitchLoading) {
             timer = setTimeout(() => {
-                if (!twitchJoined) {
+                if (!twitchJoined && serviceName === "Twitch") {
                     setIsSwitchLoading(false);
                     disconnectTwitchClient();
+                    dispatch(
+                        addNotice({
+                            id: genRandStr(),
+                            type: "error",
+                            message: "Не удалось подключиться к Twitch",
+                        }),
+                    );
                 }
-                if (!youtubeJoined) {
+                if (!youtubeJoined && serviceName === "YouTube") {
                     setIsSwitchLoading(false);
                     disconnectYouTubeClient();
+                    dispatch(
+                        addNotice({
+                            id: genRandStr(),
+                            type: "error",
+                            message: "Не удалось подключиться к YouTube",
+                        }),
+                    );
                 }
-                if (!vkJoined) {
+                if (!vkJoined && serviceName === "VK Видео Live") {
                     setIsSwitchLoading(false);
                     disconnectVkPlayClient();
+                    dispatch(
+                        addNotice({
+                            id: genRandStr(),
+                            type: "error",
+                            message: "Не удалось подключиться к VK Видео Live",
+                        }),
+                    );
                 }
             }, 10000);
         }
@@ -113,8 +136,8 @@ export const ConnectionSwitch = ({ serviceName = "", isActive = true }) => {
     const handleConnect = async () => {
         if (getConnectionStatus()) {
             // Отключение
+            // Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch
             if (serviceName === "Twitch") {
-                // Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch Twitch
                 disconnectTwitchClient();
                 dispatch(setTwitchConnectionStatus(false));
                 setIsSwitchLoading(false);
@@ -137,7 +160,7 @@ export const ConnectionSwitch = ({ serviceName = "", isActive = true }) => {
                     token: twitchBotToken,
                     botNick: twitchBotName,
                     channel: twitchChatChannelName,
-                });
+                }, dispatch);
 
                 if (client) {
                     clientRef.current = client;
@@ -186,25 +209,62 @@ export const ConnectionSwitch = ({ serviceName = "", isActive = true }) => {
                         setIsSwitchLoading(false);
                         dispatch(setVkConnectionStatus(true));
                         setVkJoined(true);
+                        dispatch(
+                            addNotice({
+                                id: genRandStr(),
+                                type: "success",
+                                message: "Подключено к VK Видео Live",
+                            }),
+                        );
                     },
                     onDisconnected: () => {
                         dispatch(setVkConnectionStatus(false));
                         setIsSwitchLoading(false);
                         setVkJoined(false);
+                        dispatch(
+                            addNotice({
+                                id: genRandStr(),
+                                type: "warning",
+                                message: "Отключено от VK Видео Live",
+                            }),
+                        );
                     },
                 };
 
-                const client = connectVkPlayClient(
-                    {
-                        channelId: vkConnectionData?.vkChannelId,
-                        token: vkConnectionData?.token,
-                    },
-                    callbacks,
-                );
+                try {
+                    const client = connectVkPlayClient(
+                        {
+                            channelId: vkConnectionData?.vkChannelId,
+                            token: vkConnectionData?.token,
+                        },
+                        callbacks,
+                    );
 
-                if (!client) {
+                    if (!client) {
+                        setIsSwitchLoading(false);
+                        dispatch(setVkConnectionStatus(false));
+                        dispatch(
+                            addNotice({
+                                id: genRandStr(),
+                                type: "error",
+                                message:
+                                    "Не удалось подключиться к VK Видео Live",
+                            }),
+                        );
+                    }
+                } catch (error) {
+                    const errorText = error?.message || String(error);
                     setIsSwitchLoading(false);
                     dispatch(setVkConnectionStatus(false));
+                    dispatch(
+                        addNotice({
+                            id: genRandStr(),
+                            type: "error",
+                            message: errorText.includes("properties")
+                                ? "Заполните поля ID и токена"
+                                : `Ошибка подключения к VK Видео Live: ${error}`,
+                        }),
+                    );
                 }
             } else if (serviceName === "YouTube") {
                 // YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube YouTube
@@ -233,17 +293,33 @@ export const ConnectionSwitch = ({ serviceName = "", isActive = true }) => {
                             videoId: youtubeVideoIdFormatted,
                         },
                         callbacks,
+                        dispatch,
                     );
 
                     if (client) {
                         clientRef.current = client;
                     } else {
                         console.error("❌ Не удалось создать YouTube клиент");
+                        dispatch(
+                            addNotice({
+                                id: genRandStr(),
+                                type: "error",
+                                message: "Не удалось подключиться к YouTube",
+                            }),
+                        );
                         setIsSwitchLoading(false);
                         dispatch(setYoutubeConnectionStatus(false));
                     }
                 } catch (error) {
+                    const errorText = error?.message || String(error);
                     console.error("❌ Ошибка подключения YouTube:", error);
+                    dispatch(
+                        addNotice({
+                            id: genRandStr(),
+                            type: "error",
+                            message: `Ошибка подключения к YouTube: ${errorText}`,
+                        }),
+                    );
                     setIsSwitchLoading(false);
                     dispatch(setYoutubeConnectionStatus(false));
                 }

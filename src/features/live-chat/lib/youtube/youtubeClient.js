@@ -3,24 +3,72 @@
  * Note: YouTube API uses polling rather than WebSocket connections.
  */
 
-const googleApiKeys = import.meta.env.VITE_GOOGLE_API_KEYS.split(' ');
+import { genRandStr } from "../../../../shared/lib/genRandStr";
+import { addNotice } from "../../../in-app-notices/model/slice";
+
+const googleApiKeys = import.meta.env.VITE_GOOGLE_API_KEYS.split(" ");
 let googleApiID = 0;
 
 function getCurrentKey() {
     return googleApiKeys[googleApiID];
 }
 
-function rotateKey() {
+function rotateKey(dispatch) {
     googleApiID++;
+    dispatch(
+        addNotice({
+            id: genRandStr(),
+            type: "info",
+            message: `Переключился на следующий API ключ: ${googleApiID} / ${googleApiKeys.length}`,
+        }),
+    );
     if (googleApiID >= googleApiKeys.length) {
         throw new Error("❌ Все Google API ключи исчерпаны");
+        dispatch(
+            addNotice({
+                id: genRandStr(),
+                type: "error",
+                message: "Все Google API ключи исчерпаны",
+            }),
+        );
     }
 }
 
-export function connectYouTubeChat({ accessToken, liveChatId }, callbacks = {}) {
-
+export function connectYouTubeChat(
+    { accessToken, liveChatId },
+    callbacks = {},
+    dispatch,
+) {
     if (!accessToken || !liveChatId) {
-        console.error("❌ Отсутствуют обязательные параметры: accessToken и liveChatId");
+        console.error(
+            "❌ Отсутствуют обязательные параметры: accessToken и liveChatId",
+        );
+        if (!accessToken) {
+            dispatch(
+                addNotice({
+                    id: genRandStr(),
+                    type: "error",
+                    message: "Войдите с помощью любого Google аккаунта",
+                }),
+            );
+        } else if (!liveChatId) {
+            dispatch(
+                addNotice({
+                    id: genRandStr(),
+                    type: "error",
+                    message: "Укажите ссылку на прямую трансляцию или её ID",
+                }),
+            );
+        } else if (!accessToken || !liveChatId) {
+            dispatch(
+                addNotice({
+                    id: genRandStr(),
+                    type: "error",
+                    message:
+                        "Войдите с помощью любого Google аккаунта и укажите ссылку на прямую трансляцию или её ID",
+                }),
+            );
+        }
         if (callbacks.onDisconnected) {
             callbacks.onDisconnected();
         }
@@ -34,7 +82,7 @@ export function connectYouTubeChat({ accessToken, liveChatId }, callbacks = {}) 
         pollInterval: null,
         messageListeners: [],
         connectionListeners: [],
-        disconnectListeners: []
+        disconnectListeners: [],
     };
 
     // Добавляем колбэки если они предоставлены
@@ -57,18 +105,24 @@ export function connectYouTubeChat({ accessToken, liveChatId }, callbacks = {}) 
         if (!client.isConnected) return;
 
         try {
-            const url = `https://www.googleapis.com/youtube/v3/liveChat/messages?key=${getCurrentKey()}&liveChatId=${liveChatId}&part=id,snippet,authorDetails${client.nextPageToken ? `&pageToken=${client.nextPageToken}` : ''}`;
+            const url = `https://www.googleapis.com/youtube/v3/liveChat/messages?key=${getCurrentKey()}&liveChatId=${liveChatId}&part=id,snippet,authorDetails${client.nextPageToken ? `&pageToken=${client.nextPageToken}` : ""}`;
 
             const response = await fetch(url);
             const data = await response.json();
 
             if (data.error) {
                 console.error("❌ YouTube API Error:", data.error);
+                dispatch(
+                    addNotice({
+                        id: genRandStr(),
+                        type: "error",
+                        message: `Ошибка YouTube API: ${data.error.message}`,
+                    }),
+                );
                 if (data.error.code === 403) {
                     try {
-                        rotateKey();
-                        console.warn("🔄 Переключился на следующий API ключ:", getCurrentKey());
-                        // сразу пробуем снова с новым ключом
+                        rotateKey(dispatch);
+                        console.warn("🔄 Переключился на следующий API ключ");
                         pollMessages();
                     } catch {
                         client.disconnect();
@@ -78,7 +132,6 @@ export function connectYouTubeChat({ accessToken, liveChatId }, callbacks = {}) 
                 return;
             }
 
-
             // Update next page token for subsequent requests
             client.nextPageToken = data.nextPageToken;
 
@@ -86,50 +139,95 @@ export function connectYouTubeChat({ accessToken, liveChatId }, callbacks = {}) 
             if (!client.hasConnected) {
                 client.hasConnected = true;
                 console.log("✅ YouTube Live Chat подключен");
-                client.connectionListeners.forEach(listener => {
+                dispatch(
+                    addNotice({
+                        id: genRandStr(),
+                        type: "success",
+                        message: "Подключено к YouTube Live Chat",
+                    }),
+                );
+                client.connectionListeners.forEach((listener) => {
                     try {
                         listener();
                     } catch (error) {
-                        console.error("❌ Ошибка в onConnected колбэке:", error);
+                        console.error(
+                            "❌ Ошибка в onConnected колбэке:",
+                            error,
+                        );
+                        dispatch(
+                            addNotice({
+                                id: genRandStr(),
+                                type: "error",
+                                message: `Ошибка при подключении: ${error.message}`,
+                            }),
+                        );
                     }
                 });
             }
 
             // Process messages
             if (data.items && data.items.length > 0) {
-                data.items.forEach(message => {
+                data.items.forEach((message) => {
                     // Notify all message listeners
-                    client.messageListeners.forEach(listener => {
+                    client.messageListeners.forEach((listener) => {
                         try {
                             listener({
                                 message: message.snippet.displayMessage,
                                 tags: {
-                                    'display-name': message.authorDetails.displayName,
-                                    'color': message.authorDetails.profileImageUrl ? '#FFFFFF' : '#CCCCCC',
-                                    'is-verified': message.authorDetails.isVerified,
-                                    'is-owner': message.authorDetails.isChatOwner,
-                                    'is-moderator': message.authorDetails.isChatModerator,
-                                    'is-sponsor': message.authorDetails.isChatSponsor
+                                    "display-name":
+                                        message.authorDetails.displayName,
+                                    color: message.authorDetails.profileImageUrl
+                                        ? "#FFFFFF"
+                                        : "#CCCCCC",
+                                    "is-verified":
+                                        message.authorDetails.isVerified,
+                                    "is-owner":
+                                        message.authorDetails.isChatOwner,
+                                    "is-moderator":
+                                        message.authorDetails.isChatModerator,
+                                    "is-sponsor":
+                                        message.authorDetails.isChatSponsor,
                                 },
-                                raw: message
+                                raw: message,
                             });
                         } catch (error) {
-                            console.error("❌ Ошибка в onChatMessage колбэке:", error);
+                            console.error(
+                                "❌ Ошибка в onChatMessage колбэке:",
+                                error,
+                            );
+                            dispatch(
+                                addNotice({
+                                    id: genRandStr(),
+                                    type: "error",
+                                    message: `Ошибка при обработке сообщения: ${error.message}`,
+                                }),
+                            );
                         }
                     });
                 });
             }
 
             // Calculate next poll time (YouTube recommends following the poll delay)
-            const pollDelay = data.pollingIntervalMillis || import.meta.env.VITE_GOOGLE_TIMEOUT;
+            const pollDelay =
+                data.pollingIntervalMillis ||
+                import.meta.env.VITE_GOOGLE_TIMEOUT;
 
             // Schedule next poll
             client.pollInterval = setTimeout(pollMessages, pollDelay);
-
         } catch (error) {
             console.error("❌ Error polling YouTube messages:", error);
+            dispatch(
+                addNotice({
+                    id: genRandStr(),
+                    type: "error",
+                    message: `Ошибка при получении сообщений: ${error.message}`,
+                }),
+            );
             // Retry after error with fallback delay
-            client.pollInterval = setTimeout(pollMessages, import.meta.env.VITE_GOOGLE_TIMEOUT);
+            client.pollInterval = setTimeout(
+                pollMessages,
+                import.meta.env.VITE_GOOGLE_TIMEOUT,
+            );
         }
     };
 
@@ -137,7 +235,9 @@ export function connectYouTubeChat({ accessToken, liveChatId }, callbacks = {}) 
      * Start polling for messages
      */
     client.startPolling = () => {
-        console.log(`✅ Starting YouTube Live Chat polling for chat: ${liveChatId}`);
+        console.log(
+            `✅ Starting YouTube Live Chat polling for chat: ${liveChatId}`,
+        );
         pollMessages();
     };
 
@@ -146,6 +246,13 @@ export function connectYouTubeChat({ accessToken, liveChatId }, callbacks = {}) 
      */
     client.disconnect = () => {
         console.log("🔌 Disconnecting from YouTube Live Chat");
+        dispatch(
+            addNotice({
+                id: genRandStr(),
+                type: "warning",
+                message: "Отключено от YouTube Live Chat",
+            }),
+        );
         client.isConnected = false;
 
         if (client.pollInterval) {
@@ -154,11 +261,18 @@ export function connectYouTubeChat({ accessToken, liveChatId }, callbacks = {}) 
         }
 
         // Notify disconnect listeners
-        client.disconnectListeners.forEach(listener => {
+        client.disconnectListeners.forEach((listener) => {
             try {
                 listener();
             } catch (error) {
                 console.error("❌ Ошибка в onDisconnected колбэке:", error);
+                dispatch(
+                    addNotice({
+                        id: genRandStr(),
+                        type: "error",
+                        message: `Ошибка при отключении: ${error.message}`,
+                    }),
+                );
             }
         });
 
@@ -193,22 +307,25 @@ export function connectYouTubeChat({ accessToken, liveChatId }, callbacks = {}) 
         }
 
         try {
-            const response = await fetch(`https://www.googleapis.com/youtube/v3/liveChat/messages?part=snippet`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json'
+            const response = await fetch(
+                `https://www.googleapis.com/youtube/v3/liveChat/messages?part=snippet`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        snippet: {
+                            liveChatId: liveChatId,
+                            type: "textMessageEvent",
+                            textMessageDetails: {
+                                messageText: messageText,
+                            },
+                        },
+                    }),
                 },
-                body: JSON.stringify({
-                    snippet: {
-                        liveChatId: liveChatId,
-                        type: 'textMessageEvent',
-                        textMessageDetails: {
-                            messageText: messageText
-                        }
-                    }
-                })
-            });
+            );
 
             const result = await response.json();
             if (result.error) {
@@ -218,7 +335,6 @@ export function connectYouTubeChat({ accessToken, liveChatId }, callbacks = {}) 
 
             console.log("✅ Message sent to YouTube Live Chat");
             return true;
-
         } catch (error) {
             console.error("❌ Error sending message:", error);
             return false;
@@ -234,7 +350,8 @@ export function connectYouTubeChat({ accessToken, liveChatId }, callbacks = {}) 
 /**
  * Utility function to get liveChatId from video ID
  */
-export async function getLiveChatIdFromVideo({ videoId }) {
+
+export async function getLiveChatIdFromVideo({ videoId }, dispatch) {
     if (!videoId) {
         console.error("❌ Missing videoId");
         return null;
@@ -249,8 +366,8 @@ export async function getLiveChatIdFromVideo({ videoId }) {
             console.error("❌ YouTube API Error:", data.error);
             if (data.error.code === 403) {
                 try {
-                    rotateKey();
-                    console.warn("🔄 Переключился на следующий API ключ:", getCurrentKey());
+                    rotateKey(dispatch);
+                    console.warn("🔄 Переключился на следующий API ключ:");
                     // пробуем ещё раз
                     return await getLiveChatIdFromVideo({ videoId });
                 } catch {
@@ -261,7 +378,8 @@ export async function getLiveChatIdFromVideo({ videoId }) {
         }
 
         if (data.items && data.items.length > 0) {
-            const liveChatId = data.items[0].liveStreamingDetails.activeLiveChatId;
+            const liveChatId =
+                data.items[0].liveStreamingDetails.activeLiveChatId;
             if (liveChatId) {
                 console.log(`✅ Found liveChatId: ${liveChatId}`);
                 return liveChatId;
@@ -269,8 +387,14 @@ export async function getLiveChatIdFromVideo({ videoId }) {
         }
 
         console.error("❌ No active live chat found for this video", videoId);
+        dispatch(
+            addNotice({
+                id: genRandStr(),
+                type: "warning",
+                message: "Нет активного чата для этого видео",
+            }),
+        );
         return null;
-
     } catch (error) {
         console.error("❌ Error getting liveChatId:", error);
         return null;

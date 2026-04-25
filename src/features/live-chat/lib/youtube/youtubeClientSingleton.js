@@ -11,7 +11,7 @@ export function getYouTubeClient() {
     return client;
 }
 
-export async function connectYouTubeClient(options, callbacks = {}) {
+export async function connectYouTubeClient(options, callbacks = {}, dispatch) {
     console.log("options", options);
 
     // Если уже есть подключенный клиент, отключаем его
@@ -22,9 +22,12 @@ export async function connectYouTubeClient(options, callbacks = {}) {
     // Получаем liveChatId из videoId если нужно
     let liveChatId = options.liveChatId;
     if (!liveChatId && options.videoId) {
-        liveChatId = await getLiveChatIdFromVideo({
-            videoId: options.videoId,
-        });
+        liveChatId = await getLiveChatIdFromVideo(
+            {
+                videoId: options.videoId,
+            },
+            dispatch,
+        );
 
         if (!liveChatId) {
             console.error("❌ Не удалось получить liveChatId из video");
@@ -60,7 +63,7 @@ export async function connectYouTubeClient(options, callbacks = {}) {
     };
 
     try {
-        client = connectYouTubeChat(clientOptions, callbacks);
+        client = connectYouTubeChat(clientOptions, callbacks, dispatch);
         currentOptions = clientOptions;
         currentCallbacks = callbacks;
 

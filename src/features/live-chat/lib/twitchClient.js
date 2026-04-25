@@ -1,11 +1,22 @@
 // twitchClient.js
 import tmi from "tmi.js";
+import { addNotice } from "../../in-app-notices/model/slice";
+import { genRandStr } from "../../../shared/lib/genRandStr";
 
-export function connectTwitchChat({ token, botNick, channel }) {
+export function connectTwitchChat(
+    { token, botNick, channel },
+    dispatch = () => {},
+) {
     console.warn("connectTwitchChat channel", channel);
 
     if (!token || !botNick || !channel) {
         console.error("Нет данных для подключения к Twitch");
+        dispatch(
+            addNotice({
+                type: "error",
+                message: "Заполните поля для подключения к Twitch",
+            }),
+        );
         return null;
     }
 
@@ -20,11 +31,25 @@ export function connectTwitchChat({ token, botNick, channel }) {
 
     client.connect().catch((err) => {
         console.error("❌ Ошибка подключения к Twitch:", err);
+        dispatch(
+            addNotice({
+                id: genRandStr(),
+                type: "error",
+                message: `Ошибка подключения к Twitch (${err})`,
+            }),
+        );
         return;
     });
 
     client.on("error", (err) => {
         console.error("❌ Twitch error:", err);
+        dispatch(
+            addNotice({
+                id: genRandStr(),
+                type: "error",
+                message: `Ошибка Twitch (${err})`,
+            }),
+        );
     });
 
     client.on("connected", () => {
@@ -33,6 +58,13 @@ export function connectTwitchChat({ token, botNick, channel }) {
 
     client.on("disconnected", (reason) => {
         console.warn(`⚠️ Отключено от Twitch: ${reason}`);
+        dispatch(
+            addNotice({
+                id: genRandStr(),
+                type: "warning",
+                message: `Отключено от Twitch: ${reason}`,
+            }),
+        );
     });
 
     client.on("connecting", () => {
@@ -49,11 +81,25 @@ export function connectTwitchChat({ token, botNick, channel }) {
         if (self) {
             joined = true;
             console.log("✅ Успешно подключились к каналу:", ch);
+            dispatch(
+                addNotice({
+                    id: genRandStr(),
+                    type: "success",
+                    message: `Подключено к каналу Twitch: ${ch}`,
+                }),
+            );
         }
     });
 
     client.on("notice", (channel, msgid, message) => {
         console.warn("⚠️ NOTICE:", msgid, message);
+        dispatch(
+            addNotice({
+                id: genRandStr(),
+                type: "warning",
+                message: `Уведомление: ${msgid} ${message}`,
+            }),
+        );
     });
 
     return client;

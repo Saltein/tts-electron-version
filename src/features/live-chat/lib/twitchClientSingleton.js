@@ -6,9 +6,9 @@ export function getTwitchClient() {
     return client;
 }
 
-export function connectTwitchClient(options) {
+export function connectTwitchClient(options, dispatch) {
     if (!client) {
-        client = connectTwitchChat(options);
+        client = connectTwitchChat(options, dispatch);
     }
     return client;
 }
