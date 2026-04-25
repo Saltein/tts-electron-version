@@ -5,7 +5,6 @@ import CloseIcon from "../../../../shared/assets/icons/close.svg?react";
 
 export const WindowControlButton = ({ type = "close" }) => {
     const handleClick = () => {
-        console.log("click", type);
         switch (type) {
             case "minimize":
                 window.electronAPI.minimize();

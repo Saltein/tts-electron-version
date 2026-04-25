@@ -191,6 +191,8 @@ function stopTTSServer() {
 }
 
 async function createWindow() {
+    const isDev = !app.isPackaged;
+
     mainWindow = new BrowserWindow({
         width: 1280,
         height: 960,
@@ -199,14 +201,13 @@ async function createWindow() {
             preload: path.join(__dirname, "preload.js"),
             contextIsolation: true,
             nodeIntegration: false,
-            devTools: true,
+            devTools: isDev,
         },
     });
 
     // Запускаем OAuth сервер
     await startOAuthServer(mainWindow);
 
-    const isDev = !app.isPackaged;
     if (isDev) {
         mainWindow.loadURL("http://localhost:5173");
     } else {

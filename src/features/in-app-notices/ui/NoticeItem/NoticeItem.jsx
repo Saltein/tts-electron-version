@@ -33,7 +33,6 @@ export const NoticeItem = ({ notice, time = 10000 }) => {
 
     const handlePress = () => {
         dispatch(removeNotice(notice.id));
-        console.log("click");
     };
 
     return (

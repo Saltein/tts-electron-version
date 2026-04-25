@@ -69,7 +69,6 @@ const WebSocketRoom = ({ inWidget = false }) => {
 
         // подписка теперь просто для локальных логов
         const unsubscribe = subscribe((data) => {
-            console.log("📩 Получено сообщение (локально):", data);
             if (data.type === "room_created") {
                 setRoomCodeLocal(data.code);
             }

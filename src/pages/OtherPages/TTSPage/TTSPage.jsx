@@ -1,3 +1,4 @@
+// TTSPage.tsx
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -6,6 +7,7 @@ import {
     selectTwitchVoice,
     setSpeechVolume,
     setTwitchTTSOn,
+    setTwitchVoice, // Добавьте этот импорт
 } from "../../../features/tts-chat/model/slice";
 import {
     DefaultOption,
@@ -20,14 +22,14 @@ export const TTSPage = () => {
     const dispatch = useDispatch();
     const isTwitchTTSOn = useSelector(selectTwitchTTSOn);
     const twitchVoice = useSelector(selectTwitchVoice);
+    const speechVolume = useSelector(selectSpeechVolume);
 
     const baseUrl = import.meta.env.VITE_BASE_URL_API || "";
     const [optionList, setOptionList] = useState([]);
-
     const [switchDisabled, setSwitchDisabled] = useState(false);
-
     const prevIsTwitchTTSOn = useRef(isTwitchTTSOn);
 
+    // Синхронизация с сервером при изменении состояния
     useEffect(() => {
         if (prevIsTwitchTTSOn.current !== isTwitchTTSOn) {
             prevIsTwitchTTSOn.current = isTwitchTTSOn;
@@ -35,12 +37,14 @@ export const TTSPage = () => {
             setTimeout(() => {
                 setSwitchDisabled(false);
             }, 5000);
+
+            // Синхронизация с сервером
+            syncTTSServer(isTwitchTTSOn);
         }
     }, [isTwitchTTSOn]);
 
-    // Функция синхронизации состояния сервера с переключателем
     const syncTTSServer = async (enabled) => {
-        if (!window.electronAPI) return; // Запущено не в Electron (браузер)
+        if (!window.electronAPI) return;
 
         try {
             if (enabled) {
@@ -53,7 +57,7 @@ export const TTSPage = () => {
         }
     };
 
-    // При монтировании: если TTS уже включён (например, сохранённое состояние), запускаем сервер
+    // При монтировании: синхронизация с сервером
     useEffect(() => {
         if (isTwitchTTSOn) {
             syncTTSServer(true);
@@ -71,14 +75,7 @@ export const TTSPage = () => {
         };
     }, []);
 
-    // Обработчик переключения свитча
-    const handleSwitch = async () => {
-        const newState = !isTwitchTTSOn;
-        dispatch(setTwitchTTSOn(newState));
-        await syncTTSServer(newState);
-    };
-
-    // Загрузка списка голосов с TTS сервера (без изменений)
+    // Загрузка списка голосов
     useEffect(() => {
         const fetchSpeakers = async () => {
             try {
@@ -89,7 +86,13 @@ export const TTSPage = () => {
                     return;
                 }
                 const data = await res.json();
-                setOptionList(data.speakers);
+                // Убедитесь, что данные - массив строк
+                const speakers = Array.isArray(data.speakers)
+                    ? data.speakers.map((s) =>
+                          typeof s === "string" ? s : s.name,
+                      )
+                    : [];
+                setOptionList(speakers);
             } catch (err) {
                 console.error("Ошибка запроса к TTS серверу:", err);
             }
@@ -97,6 +100,15 @@ export const TTSPage = () => {
 
         fetchSpeakers();
     }, [baseUrl]);
+
+    const handleSwitch = async () => {
+        const newState = !isTwitchTTSOn;
+        dispatch(setTwitchTTSOn(newState)); // Redux сам сохранит в localStorage
+    };
+
+    const handleVoiceSelect = (option) => {
+        dispatch(setTwitchVoice(option)); // Redux сам сохранит в localStorage
+    };
 
     return (
         <div className={s.wrapper}>
@@ -142,6 +154,7 @@ export const TTSPage = () => {
                         <DefaultSelectList
                             currentSelection={twitchVoice}
                             options={optionList}
+                            onSelect={handleVoiceSelect}
                         />
                     </DefaultWidgetShape>
                 </div>

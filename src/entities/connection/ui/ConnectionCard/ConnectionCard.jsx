@@ -102,12 +102,6 @@ export const ConnectionCard = ({
                     >
                         <div className={s.inputs}>
                             {inputs.map((input, index) => {
-                                console.log("input", input);
-                                console.log("formData", formData);
-                                console.log(
-                                    "formData[input.name]",
-                                    formData[input.name],
-                                );
                                 return (
                                     <DefaultInput
                                         key={index}

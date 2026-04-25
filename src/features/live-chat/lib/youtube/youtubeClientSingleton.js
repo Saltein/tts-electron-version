@@ -12,8 +12,6 @@ export function getYouTubeClient() {
 }
 
 export async function connectYouTubeClient(options, callbacks = {}, dispatch) {
-    console.log("options", options);
-
     // Если уже есть подключенный клиент, отключаем его
     if (client) {
         disconnectYouTubeClient();

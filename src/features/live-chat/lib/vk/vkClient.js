@@ -22,7 +22,6 @@ const colors = [
 ];
 
 export function connectVkPlayChat({ channelId, token }, dispatch) {
-    console.log("🦆 connectVkPlayChat", { channelId, token });
     if (!channelId || !token) {
         console.error(
             "❌ Не хватает данных для подключения: channelId или token",
@@ -90,7 +89,6 @@ export function connectVkPlayChat({ channelId, token }, dispatch) {
 
             // Пробуем распарсить JSON
             const msg = JSON.parse(data);
-            // console.log("📨 Получено сообщение:", msg);
 
             // Обрабатываем ping в формате JSON
             if (msg.ping !== undefined) {
@@ -140,15 +138,12 @@ export function connectVkPlayChat({ channelId, token }, dispatch) {
                 console.log("✅ Подписка на информацию о канале успешна");
             }
 
-            console.log("msg", msg);
-
             // Обрабатываем входящие сообщения чата
             if (msg.push?.channel?.startsWith("channel-chat")) {
                 const chatMsg = msg.push.pub.data.data;
                 const user = chatMsg.author?.displayName || "Unknown";
                 const text = JSON.parse(chatMsg.data[0].content)[0] || "";
 
-                console.log(`💬 VK Play сообщение: [${user}]: ${text}`);
                 ws.onChatMessage &&
                     ws.onChatMessage({
                         message: text,
