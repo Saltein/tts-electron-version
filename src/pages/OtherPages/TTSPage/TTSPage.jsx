@@ -14,6 +14,7 @@ import {
     DefaultSelectList,
     DefaultSlider,
     DefaultSwitch,
+    InfoQuestion,
 } from "../../../shared/ui";
 import { DefaultWidgetShape } from "../../../shared/widgets/DefaultWidgetShape/DefaultWidgetShape";
 import s from "./TTSPage.module.scss";
@@ -120,7 +121,22 @@ export const TTSPage = () => {
                 flexDirection={"column"}
                 display={"flex"}
             >
-                <DefaultOption name={"Включить озвучку сообщений?"}>
+                <DefaultOption
+                    name={"Включить озвучку сообщений?"}
+                    position={"relative"}
+                >
+                    <div className={s.info}>
+                        <InfoQuestion
+                            info={
+                                <>
+                                    <span>
+                                        Эта функция требует повышенного расхода
+                                    </span>
+                                    <span>оперативной памяти</span>
+                                </>
+                            }
+                        />
+                    </div>
                     <DefaultSwitch
                         state={isTwitchTTSOn}
                         onSwitch={handleSwitch}

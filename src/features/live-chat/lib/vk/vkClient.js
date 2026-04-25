@@ -22,6 +22,11 @@ const colors = [
 ];
 
 export function connectVkPlayChat({ channelId, token }, dispatch) {
+    const clearToken = token
+        ?.toString()
+        .trim()
+        .replace(/^["']|["']$/g, "");
+
     if (!channelId || !token) {
         console.error(
             "❌ Не хватает данных для подключения: channelId или token",
@@ -67,7 +72,7 @@ export function connectVkPlayChat({ channelId, token }, dispatch) {
         ws.send(
             JSON.stringify({
                 connect: {
-                    token: token,
+                    token: clearToken,
                     name: "js",
                 },
                 id: 1,

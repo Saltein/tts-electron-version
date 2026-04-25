@@ -5,3 +5,9 @@
     gap: $spacing-md;
     flex-wrap: wrap;
 }
+
+.info {
+    position: absolute;
+    display: flex;
+    top: 50%;
+}

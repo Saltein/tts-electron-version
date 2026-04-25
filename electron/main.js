@@ -267,19 +267,19 @@ ipcMain.on("open-external", (event, url) => {
 
 app.whenReady().then(createWindow);
 
-app.on("window-all-closed", () => {
-    stopTTSServer();
-    stopOAuthServer();
+app.on("window-all-closed", async () => {
+    await stopTTSServer();
+    await stopOAuthServer();
     if (process.platform !== "darwin") {
         app.quit();
     }
 });
 
-app.on("before-quit", () => {
-    stopTTSServer();
-    stopOAuthServer();
+app.on("before-quit", async () => {
+    await stopTTSServer();
+    await stopOAuthServer();
 });
 
-app.on("will-quit", () => {
-    stopTTSServer();
+app.on("will-quit", async () => {
+    await stopTTSServer();
 });
