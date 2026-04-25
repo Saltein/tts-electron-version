@@ -1,12 +1,12 @@
-import s from './GlobalPage.module.scss'
-import { NavPanel } from '../../widgets/navs/NavPanel/NavPanel'
-import { ConnectionsPage } from '../OtherPages/ConnectionsPage/ConnectionsPage'
-import { Route, Routes } from 'react-router-dom'
-import { SettingsPage } from '../OtherPages'
-import { LiveChatPage } from '../OtherPages/LiveChatPage/LiveChatPage'
-import { TTSPage } from '../OtherPages/TTSPage/TTSPage'
-import { TTSChat } from '../../features/tts-chat/TTSChat/TTSChat'
-import { Header } from '../../widgets/Header/Header'
+import s from "./GlobalPage.module.scss";
+import { NavPanel } from "../../widgets/navs/NavPanel/NavPanel";
+import { ConnectionsPage } from "../OtherPages/ConnectionsPage/ConnectionsPage";
+import { Navigate, Route, Routes } from "react-router-dom";
+import { SettingsPage } from "../OtherPages";
+import { LiveChatPage } from "../OtherPages/LiveChatPage/LiveChatPage";
+import { TTSPage } from "../OtherPages/TTSPage/TTSPage";
+import { TTSChat } from "../../features/tts-chat/TTSChat/TTSChat";
+import { Header } from "../../widgets/Header/Header";
 
 export const GlobalPage = () => {
     return (
@@ -17,14 +17,20 @@ export const GlobalPage = () => {
                 <TTSChat />
                 <div className={s.pagePart}>
                     <Routes>
-                        <Route path='/connections' element={<ConnectionsPage />} />
-                        <Route path='' element={<ConnectionsPage />} />
-                        <Route path='/live-chat' element={<LiveChatPage />} />
-                        <Route path='/settings' element={<SettingsPage />} />
-                        <Route path='/tts' element={<TTSPage />} />
+                        <Route
+                            path="/"
+                            element={<Navigate to="/connections" replace />}
+                        />
+                        <Route
+                            path="/connections"
+                            element={<ConnectionsPage />}
+                        />
+                        <Route path="/live-chat" element={<LiveChatPage />} />
+                        <Route path="/settings" element={<SettingsPage />} />
+                        <Route path="/tts" element={<TTSPage />} />
                     </Routes>
                 </div>
             </div>
         </div>
-    )
-}
+    );
+};

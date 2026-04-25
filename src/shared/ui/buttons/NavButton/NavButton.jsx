@@ -1,10 +1,10 @@
 import s from "./NavButton.module.scss";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import {
     selectNavPanelCurrentPageID,
     setNavPanelCurrentPageID,
 } from "../../../../widgets/navs/NavPanel/model/slice";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export const NavButton = ({
     title,
@@ -16,8 +16,9 @@ export const NavButton = ({
 }) => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const location = useLocation();
 
-    const currentPageID = useSelector(selectNavPanelCurrentPageID);
+    const isActive = location.pathname === link;
 
     const handleClick = () => {
         dispatch(setNavPanelCurrentPageID(index));
@@ -26,18 +27,18 @@ export const NavButton = ({
 
     return (
         <div
-            className={`${s.wrapper} ${currentPageID === index ? s.current : ""} 
+            className={`${s.wrapper} ${isActive ? s.current : ""} 
         ${position === "first" ? s.first : ""} 
         ${position === "last" ? s.last : ""}
         ${isMobile ? s.mobile : ""}`}
             onClick={handleClick}
         >
             <div
-                className={`${s.accent} ${currentPageID === index ? s.current : ""} 
+                className={`${s.accent} ${isActive ? s.current : ""} 
             ${isMobile ? s.mobile : ""}`}
             />
             <Icon
-                className={`${s.icon} ${currentPageID === index ? s.current : ""} 
+                className={`${s.icon} ${isActive ? s.current : ""} 
             ${isMobile ? s.mobile : ""}`}
             />
             {!isMobile && <h3>{title}</h3>}
