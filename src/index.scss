@@ -1,12 +1,36 @@
-@import './shared/styles/variables.scss';
+@use "./shared/styles/variables.scss" as *;
 
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  color: var(--color-text);
-  font-family: $font-family-base;
-  user-select: none;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    color: var(--color-text);
+    font-family: $font-family-base;
+    user-select: none;
 
-  transition: $transition-medium;
+    transition: $transition-medium;
+
+    /* ширина скроллбара */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    /* фон трека */
+    ::-webkit-scrollbar-track {
+        background: #1e1e1e;
+        border-radius: 10px;
+    }
+
+    /* сам ползунок */
+    ::-webkit-scrollbar-thumb {
+        background: #555;
+        border-radius: 10px;
+        border: 2px solid #1e1e1e;
+    }
+
+    /* при наведении */
+    ::-webkit-scrollbar-thumb:hover {
+        background: #888;
+    }
 }

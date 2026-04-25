@@ -1,5 +1,5 @@
-@import '../../../shared/styles/variables.scss';
-@import '../../../shared/styles/animations.scss';
+@use "../../../shared/styles/variables.scss" as *;
+@use "../../../shared/styles/animations.scss" as anim;
 
 .wrapper {
     display: flex;

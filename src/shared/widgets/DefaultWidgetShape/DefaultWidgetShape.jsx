@@ -95,7 +95,7 @@ export const DefaultWidgetShape = ({
     return (
         <div
             className={`${s.wrapper} ${animated ? s.animated : ""}`}
-            style={wrapperStyles}
+            style={{...wrapperStyles, minWidth: 0,}}
         >
             {!noTitle && (
                 <DefaultTitle

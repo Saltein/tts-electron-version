@@ -39,8 +39,8 @@ function App() {
 
     return (
         <GoogleOAuthProvider clientId={clientId}>
-            <NoticeStack />
             <div className={s.App}>
+                <NoticeStack />
                 <GlobalPage />
             </div>
         </GoogleOAuthProvider>

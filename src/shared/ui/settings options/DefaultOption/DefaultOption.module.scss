@@ -1,9 +1,9 @@
-@import '../../../styles/variables.scss';
+@use "../../../styles/variables.scss" as *;
 
 .wrapper {
     border: 1px solid var(--color-border);
     height: 48px;
-    min-width: 384px;
+    min-width: 120px;
     background-color: var(--color-items);
     border-radius: $border-radius-lg;
 
@@ -11,8 +11,4 @@
     justify-content: space-between;
     align-items: center;
     padding: $spacing-md;
-}
-
-.name {
-    
 }

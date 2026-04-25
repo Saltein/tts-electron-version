@@ -1,6 +1,7 @@
-@import '../../../shared/styles/variables.scss';
+@use '../../../shared/styles/variables.scss' as *;
 
 .settingsBlock {
     display: flex;
     gap: $spacing-md;
+    flex-wrap: wrap;
 }

@@ -1,5 +1,5 @@
-@import '../../../styles/variables.scss';
-@import '../../../styles/animations.scss';
+@use "../../../styles/variables.scss" as *;
+@use "../../../styles/animations.scss" as anim;
 
 .wrapper {
     position: relative;
@@ -25,21 +25,22 @@
 
     &.loading {
         animation: blink 0.2s infinite;
-        background: linear-gradient(90deg,
-                var(--color-surface),
-                var(--color-surface),
-                var(--color-surface),
-                var(--color-surface),
-                var(--color-surface),
-                var(--color-accent-transparent),
-                var(--color-surface),
-                var(--color-surface),
-                var(--color-surface),
-                var(--color-surface),
-                var(--color-surface),
-                var(--color-surface),
-                var(--color-surface),
-                );
+        background: linear-gradient(
+            90deg,
+            var(--color-surface),
+            var(--color-surface),
+            var(--color-surface),
+            var(--color-surface),
+            var(--color-surface),
+            var(--color-accent-transparent),
+            var(--color-surface),
+            var(--color-surface),
+            var(--color-surface),
+            var(--color-surface),
+            var(--color-surface),
+            var(--color-surface),
+            var(--color-surface)
+        );
         background-size: 200% 100%;
         animation: gradientWave 2s ease-in-out infinite;
     }
@@ -58,5 +59,7 @@
     left: 0;
     margin: $spacing-sm;
     transition: $transition-slow;
-    box-shadow: inset -2px -2px 2px rgba($color: #000000, $alpha: 0.3), inset 2px 2px 2px rgba($color: #ffffff, $alpha: 0.3);
+    box-shadow:
+        inset -2px -2px 2px rgba($color: #000000, $alpha: 0.3),
+        inset 2px 2px 2px rgba($color: #ffffff, $alpha: 0.3);
 }

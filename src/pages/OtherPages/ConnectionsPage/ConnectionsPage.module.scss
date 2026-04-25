@@ -1,10 +1,13 @@
-@import '../../../shared/styles/variables.scss';
+@use "../../../shared/styles/variables.scss" as *;
+
 
 .connections {
     display: flex;
     flex-direction: row;
     gap: $spacing-md;
     padding: $spacing-md 0;
+    overflow-x: auto;
+    min-width: 0;
 }
 
 .href {

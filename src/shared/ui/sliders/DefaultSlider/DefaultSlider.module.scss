@@ -1,4 +1,4 @@
-@import '../../../styles/variables.scss';
+@use "../../../styles/variables.scss" as *;
 
 .wrapper {
     position: relative;
@@ -29,7 +29,13 @@
 .slider_circle {
     position: relative;
     right: -1px;
-    background: radial-gradient(circle 64px at left, transparent, transparent, var(--color-accent-transparent), var(--color-accent));
+    background: radial-gradient(
+        circle 64px at left,
+        transparent,
+        transparent,
+        var(--color-accent-transparent),
+        var(--color-accent)
+    );
     height: 48px;
     width: 56px;
     border-radius: 0 24px 24px 0;

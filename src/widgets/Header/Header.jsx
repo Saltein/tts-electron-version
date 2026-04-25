@@ -1,13 +1,22 @@
+import { useMediaQuery } from "react-responsive";
 import { WindowControlButton } from "../../processes";
 import s from "./Header.module.scss";
 
 export const Header = () => {
+    const isMicroWindow = useMediaQuery({
+        query: "(max-width: 380px)",
+    });
+
     return (
         <header className={s.header}>
             <div className={s.draggable}>
                 <div className={s.logo}>
-                    <h1 className={s.h1}>TTS Chat</h1>
-                    <p className={s.p}>Сервис для озвучки чата</p>
+                    <h1 className={s.h1}>TTS {!isMicroWindow && "Chat"}</h1>
+                    {!isMicroWindow ? (
+                        <p className={s.p}>Сервис для озвучки чата</p>
+                    ) : (
+                        <p className={`${s.p} ${s.small}`}>Chat</p>
+                    )}
                 </div>
             </div>
 
