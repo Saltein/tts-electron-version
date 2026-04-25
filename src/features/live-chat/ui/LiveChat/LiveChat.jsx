@@ -64,7 +64,7 @@ export const LiveChat = ({ backgroundColor, isWidget }) => {
                         : () => {}
                 }
             >
-                {isWidget && <WebSocketRoom inWidget />}
+                {/* {isWidget && <WebSocketRoom inWidget />} */}
 
                 <ChatMessage
                     message={{

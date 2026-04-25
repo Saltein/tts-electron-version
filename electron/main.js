@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import { startOAuthServer, stopOAuthServer } from "./oauthServer.js";
 import { spawn, exec } from "child_process";
 import fs from "fs";
+import { startWidgetServer, stopWidgetServer } from "./widgetServer.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -209,6 +210,11 @@ async function createWindow() {
 
     // Запускаем OAuth сервер
     await startOAuthServer(mainWindow);
+    try {
+        await startWidgetServer();
+    } catch (e) {
+        console.error(e);
+    }
 
     if (isDev) {
         mainWindow.loadURL("http://localhost:5173");
@@ -270,6 +276,7 @@ app.whenReady().then(createWindow);
 app.on("window-all-closed", async () => {
     await stopTTSServer();
     await stopOAuthServer();
+    await stopWidgetServer();
     if (process.platform !== "darwin") {
         app.quit();
     }
@@ -278,8 +285,11 @@ app.on("window-all-closed", async () => {
 app.on("before-quit", async () => {
     await stopTTSServer();
     await stopOAuthServer();
+    await stopWidgetServer();
 });
 
 app.on("will-quit", async () => {
     await stopTTSServer();
+    await stopOAuthServer();
+    await stopWidgetServer();
 });

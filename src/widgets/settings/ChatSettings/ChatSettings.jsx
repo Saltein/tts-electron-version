@@ -128,7 +128,7 @@ export const ChatSettings = () => {
     ];
 
     useEffect(() => {
-        setLink(`${baseUrl}/widget/chat?${convertObjToStr(queryParamList)}`);
+        setLink(`${baseUrl}/#/widget/chat?${convertObjToStr(queryParamList)}`);
     }, queryParamList);
 
     useEffect(() => {

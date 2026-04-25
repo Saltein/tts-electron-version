@@ -14,6 +14,7 @@
 /build
 /release
 /dist
+/electron/tts_server/tts_temp
 
 # misc
 .DS_Store

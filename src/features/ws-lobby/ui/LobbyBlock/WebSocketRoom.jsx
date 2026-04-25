@@ -155,7 +155,7 @@ const WebSocketRoom = ({ inWidget = false }) => {
                 message={{
                     message: (
                         <span>
-                            Код комнаты <b>{roomCode}</b>, это сообщение
+                            Код комнаты <b>{roomCode}</b>, это сообщение aboba
                             исчезнет через <b>{timer}</b> c
                         </span>
                     ),
